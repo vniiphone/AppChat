@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">ChatApp</string>
+    <string name="authCodeInfo">Please enter the code which you received</string>
+    <string name="check">Check</string>
+    <string name="hello_welco">
+Hello, Welcome Back
+</string>
+</resources>

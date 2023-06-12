@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- drawable/dayflow_sit.xml -->
+<vector
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="188.22dp"
+    android:height="229dp"
+    android:viewportWidth="188.22"
+    android:viewportHeight="229"
+    >
+    <group>
+        <clip-path
+            android:pathData="M0 0H188.218V229H0V0Z"
+            />
+    </group>
+</vector>

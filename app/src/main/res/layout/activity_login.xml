@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".Activities.LoginActivity">
+    <!-- login screen -->
+
+    <!-- Hello, Welcome Back -->
+    <TextView
+        android:id="@+id/hello_welco"
+        android:layout_width="255dp"
+        android:layout_height="36dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_centerInParent="true"
+        android:layout_marginLeft="22dp"
+        android:layout_marginTop="59dp"
+        android:text="@string/hello_welco"
+        android:textAppearance="@style/hello_welco" />
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:layout_toRightOf="@id/hello_welco"
+        android:src="@drawable/welcome" />
+
+    <TextView
+        android:id="@+id/hello_text"
+        android:layout_width="255dp"
+        android:layout_height="46dp"
+        android:layout_below="@+id/hello_welco"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="22dp"
+        android:text="Rất vui được gặp lại, trước khi bắt đẫu hãy đăng nhập trước"
+        android:textAppearance="@style/hello_welco"
+        android:textSize="15sp" />
+
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/layout_textinput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/hello_text"
+        android:layout_marginTop="75dp"
+        android:hint="Phone Number"
+        android:padding="15dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edt_sdt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="phone"
+            android:text="+84" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <Button
+        android:id="@+id/btn_login"
+        android:layout_width="282dp"
+        android:layout_height="49dp"
+        android:layout_below="@id/layout_textinput"
+        android:layout_centerInParent="true"
+        android:layout_marginTop="50dp"
+        android:background="@drawable/buttonlogin"
+        android:text="Đăng Nhập"
+        android:textSize="20sp">
+
+    </Button>
+
+
+</RelativeLayout>
+
