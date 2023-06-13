@@ -75,24 +75,24 @@ public class TestChatV1Activity extends AppCompatActivity {
         // main loop
         while (!needQuit) {
             // await authorization
-            Log.d("TestChatV1-onCreate: ","1. await authorization");
+            Log.d("TestChatV1-onCreate: ", "1. await authorization");
             authorizationLock.lock();
             try {
                 while (!haveAuthorization) {
                     try {
-                        Log.d("TestChatV1-onCreate: ","2. gotAuthorization");
+                        Log.d("TestChatV1-onCreate: ", "2. gotAuthorization");
                         gotAuthorization.await();
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
                 }
             } finally {
-                Log.d("TestChatV1-onCreate: ","3. authorizationLock");
+                Log.d("TestChatV1-onCreate: ", "3. authorizationLock");
                 authorizationLock.unlock();
             }
 
             while (haveAuthorization) {
-                Log.d("TestChatV1-onCreate: ","4. haveAuthorization ->  getCommand()");
+                Log.d("TestChatV1-onCreate: ", "4. haveAuthorization ->  getCommand()");
                 getCommand();
             }
         }
@@ -110,12 +110,13 @@ public class TestChatV1Activity extends AppCompatActivity {
     private static long getChatId(String arg) {
         long chatId = 0;
         try {
-            Log.d("TestChatV1-getChatId: ","5. chatId:"+chatId);
+            Log.d("TestChatV1-getChatId: ", "5. chatId:" + chatId);
             chatId = Long.parseLong(arg);
         } catch (NumberFormatException ignored) {
         }
         return chatId;
     }
+
     private static String promptString(String prompt) {
         System.out.print(prompt);
         currentPrompt = prompt;
@@ -126,6 +127,7 @@ public class TestChatV1Activity extends AppCompatActivity {
         currentPrompt = null;
         return str;
     }
+
     private static int toInt(String arg) {
         int result = 0;
         try {
@@ -145,12 +147,12 @@ public class TestChatV1Activity extends AppCompatActivity {
                     if (commands.length > 1) {
                         limit = toInt(commands[1]);
                     }
-                    Log.d("TestChatV1-getCommand: ","6. gcs:");
+                    Log.d("TestChatV1-getCommand: ", "6. gcs:");
                     getMainChatList(limit);
                     break;
                 }
                 case "gc":
-                    Log.d("TestChatV1-getCommand: ","6. gcs:");
+                    Log.d("TestChatV1-getCommand: ", "6. gcs:");
                     client.send(new TdApi.GetChat(getChatId(commands[1])), defaultHandler);
                     break;
                 case "me":
@@ -181,7 +183,14 @@ public class TestChatV1Activity extends AppCompatActivity {
 
     private static void sendMessage(long chatId, String message) {
         // initialize reply markup just for testing
-        TdApi.InlineKeyboardButton[] row = {new TdApi.InlineKeyboardButton("https://telegram.org?1", new TdApi.InlineKeyboardButtonTypeUrl()), new TdApi.InlineKeyboardButton("https://telegram.org?2", new TdApi.InlineKeyboardButtonTypeUrl()), new TdApi.InlineKeyboardButton("https://telegram.org?3", new TdApi.InlineKeyboardButtonTypeUrl())};
+        TdApi.InlineKeyboardButton[] row = {
+                new TdApi.InlineKeyboardButton("https://telegram.org?1",
+                        new TdApi.InlineKeyboardButtonTypeUrl()),
+                new TdApi.InlineKeyboardButton("https://telegram.org?2",
+                        new TdApi.InlineKeyboardButtonTypeUrl()),
+                new TdApi.InlineKeyboardButton("https://telegram.org?3",
+                        new TdApi.InlineKeyboardButtonTypeUrl()
+                )};
         TdApi.ReplyMarkup replyMarkup = new TdApi.ReplyMarkupInlineKeyboard(new TdApi.InlineKeyboardButton[][]{row, row, row});
 
         TdApi.InputMessageContent content = new TdApi.InputMessageText(new TdApi.FormattedText(message, null), false, true);

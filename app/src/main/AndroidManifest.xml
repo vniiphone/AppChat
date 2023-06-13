@@ -16,6 +16,9 @@
         android:theme="@style/Theme.ChatApp"
         tools:targetApi="31">
         <activity
+            android:name=".Activities.ListConversationsActivity"
+            android:exported="false" />
+        <activity
             android:name=".Activities.TestChatV1Activity"
             android:exported="false" />
         <activity

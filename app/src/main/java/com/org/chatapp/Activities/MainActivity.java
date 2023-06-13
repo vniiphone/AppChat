@@ -102,9 +102,9 @@ public class MainActivity extends AppCompatActivity implements TDLibManager.Call
                 // Đã đăng nhập trước đó, chuyển hướng đến ConversationActivity
                 Log.d("Main", "trạng thái chuyển hướng đến ConversationActivity");
 
-                Log.d("AuthorizationStateReady", "Gọi getMainListChat: ");
-                getMainChatList(1);
-                Intent conversationIntent = new Intent(MainActivity.this, ConversationActivity.class);
+                Log.d("AuthorizationStateReady", "Gọi ListConversationsActivity: "+client.toString());
+//                getMainChatList(1);
+                Intent conversationIntent = new Intent(MainActivity.this, ListConversationsActivity.class);
                 startActivity(conversationIntent);
                 finish();
                 break;
