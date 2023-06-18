@@ -15,12 +15,15 @@ import android.widget.PopupWindow;
 import android.widget.Toast;
 
 import com.org.chatapp.R;
+import com.org.chatapp.Utils.ChatsManager;
 import com.org.chatapp.Utils.TDLibManager;
+import com.org.chatapp.Utils.Utils;
 
 import org.drinkless.td.libcore.telegram.Client;
 import org.drinkless.td.libcore.telegram.TdApi;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.NavigableSet;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,7 +32,7 @@ import java.util.concurrent.ConcurrentMap;
 public class MainActivity extends AppCompatActivity implements TDLibManager.Callback {
     private static Client client;
     boolean haveAuthorization = false;
-    private static final NavigableSet<OrderedChat> mainChatList = new TreeSet<OrderedChat>();
+    //    private static final NavigableSet<OrderedChat> mainChatList = new TreeSet<OrderedChat>();
     private static final String newLine = System.getProperty("line.separator");
     private static final ConcurrentMap<Long, TdApi.Chat> chats = new ConcurrentHashMap<Long, TdApi.Chat>();
 
@@ -41,13 +44,6 @@ public class MainActivity extends AppCompatActivity implements TDLibManager.Call
         TdApi.GetAuthorizationState AuthState = new TdApi.GetAuthorizationState();
         client = TDLibManager.getClient(this);
         client.send(AuthState, this);
-
-        // Khởi tạo client và gửi yêu cầu GetAuthorizationState
-        client = TDLibManager.getClient(this);
-        TdApi.GetAuthorizationState request = new TdApi.GetAuthorizationState();
-        client.send(request, this);
-        Log.d("MainActivity", "client.send(request, this); at line 38");
-
     }
 
 
@@ -100,20 +96,31 @@ public class MainActivity extends AppCompatActivity implements TDLibManager.Call
                 break;
             case TdApi.AuthorizationStateReady.CONSTRUCTOR:
                 // Đã đăng nhập trước đó, chuyển hướng đến ConversationActivity
-                Log.d("Main", "trạng thái chuyển hướng đến ConversationActivity");
-
-                Log.d("AuthorizationStateReady", "Gọi ListConversationsActivity: "+client.toString());
-//                getMainChatList(1);
-                Intent conversationIntent = new Intent(MainActivity.this, ListConversationsActivity.class);
+                Log.d("Main", "Gọi ListConversationsActivity: ");
+                Intent conversationIntent = new Intent(MainActivity.this, ConversationActivity.class);
                 startActivity(conversationIntent);
                 finish();
                 break;
+                /*
+//                getMainChatList(1);
+//                ListChatsActivity.getMainChatList(100);
+//                GetMainListChatUtil.getMainChatList(20, client);
+//                ChatsManager.getInstance().getChats();
+
+
+             getChats();
+                synchronized (chatList) {
+                    Log.d("lol", "AuthorizationStateReady.CONSTRUCTOR:: " + chatList.size());
+                    for (TdApi.Chat chat : chatList) {
+                        Log.d("lol2", "Chat: " + chat.title + " lastMessage: " + chat.lastMessage);
+                    }
+                }
+//                Utils.getMainChatList(20);*/
+
             case TdApi.AuthorizationStateWaitRegistration.CONSTRUCTOR: {
                 Intent RegistrationIntent = new Intent(MainActivity.this, RegistrationActivity.class);
                 startActivity(RegistrationIntent);
                 finish();
-
-//                client.send(new TdApi.RegisterUser(firstName, lastName), new AuthorizationRequestHandler());
                 break;
             }
             case TdApi.AuthorizationStateLoggingOut.CONSTRUCTOR:
@@ -129,7 +136,48 @@ public class MainActivity extends AppCompatActivity implements TDLibManager.Call
         }
 
     }
-    private static void getMainChatList(final int limit) {
+
+    private ArrayList<TdApi.Chat> chatList = new ArrayList<>();
+
+    public ArrayList<TdApi.Chat> getChats() {
+        Log.d("lol", "getChats: " + chatList.size());
+//        TdApi.ChatList chatList1 = new TdApi.ChatList()
+        client.send(new TdApi.GetChats(new TdApi.ChatList() {
+            @Override
+            public int getConstructor() {
+                return TdApi.ChatListMain.CONSTRUCTOR;
+            }
+        }, 20), new Client.ResultHandler() {
+            @Override
+            public void onResult(TdApi.Object object) {
+                switch (object.getConstructor()) {
+                    case TdApi.Error.CONSTRUCTOR:
+                        Log.d("lol", "object: " + object);
+                        break;
+                    case TdApi.Chats.CONSTRUCTOR:
+                        long chatIDs[] = ((TdApi.Chats) object).chatIds;
+
+                        for (long chatID : chatIDs) {
+                            Log.d("lol", "onResult: " + chatID);
+                            client.send(new TdApi.GetChat(chatID), this, null);
+                        }
+                        Log.d("lol", "onResult: " + chatIDs.toString());
+                        break;
+                    case TdApi.Chat.CONSTRUCTOR:
+                        Log.d("lol", "Chat.CONSTRUCTOR: " + object);
+                        TdApi.Chat myChat = ((TdApi.Chat) object);
+
+                        chatList.add(myChat);
+                        Log.d("lol", "Chat.CONSTRUCTOR: " + chatList.size());
+                        break;
+                }
+            }
+        });
+        Log.d("lol", "getChatsList: " + chatList.size());
+        return chatList;
+    }
+
+    /*private static void getMainChatList(final int limit) {
         synchronized (mainChatList) {
             Log.d("onResult", String.valueOf(mainChatList.size()));
             if ( limit > mainChatList.size()) {
@@ -205,6 +253,6 @@ public class MainActivity extends AppCompatActivity implements TDLibManager.Call
             OrderedChat o = (OrderedChat) obj;
             return this.chatId == o.chatId && this.position.order == o.position.order;
         }
-    }
+    }*/
 }
 

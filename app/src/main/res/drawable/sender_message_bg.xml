@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#FFC107" /> <!-- Màu nền cho người gửi -->
+    <corners
+        android:bottomRightRadius="24dp"
+        android:topLeftRadius="15dp"
+        android:topRightRadius="24dp" />
+</shape>

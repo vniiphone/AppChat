@@ -14,11 +14,32 @@
         android:background="@drawable/buttonlogin"
         app:title="Conversation"
         app:titleTextColor="@color/WhiteSmoke" />
+
+    <TextView
+        android:id="@+id/txt_trochuyencount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/toolbar_Conversation"
+        android:layout_margin="6dp"
+        android:text="Trò chuyện: "
+        android:textColor="@color/Dark_royal_purple"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/txt_countNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/toolbar_Conversation"
+        android:layout_margin="6dp"
+        android:layout_toRightOf="@id/txt_trochuyencount"
+        android:textColor="@color/Dark_royal_purple"
+        android:textSize="20sp" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerview_conversation"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/toolbar_Conversation"
+        android:layout_below="@id/txt_trochuyencount"
         android:layout_margin="10dp"></androidx.recyclerview.widget.RecyclerView>
 
 </RelativeLayout>

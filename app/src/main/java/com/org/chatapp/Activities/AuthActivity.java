@@ -135,7 +135,7 @@ public class AuthActivity extends AppCompatActivity implements TDLibManager.Call
         }
 
 
-        // Xử lý updateAuthorizationState
+     /*   // Xử lý updateAuthorizationState
         TdApi.AuthorizationState authorizationState = ((TdApi.UpdateAuthorizationState) object).authorizationState;
         if (authorizationState instanceof TdApi.AuthorizationStateReady) {
             Toast.makeText(this, "Authorite", Toast.LENGTH_SHORT).show();
@@ -154,7 +154,7 @@ public class AuthActivity extends AppCompatActivity implements TDLibManager.Call
         else {
             // Xử lý các response khác từ TDLib client
         }
-
+*/
 
     }
 

@@ -51476,6 +51476,10 @@ public class TdApi {
          */
         public static final int CONSTRUCTOR = -972768574;
 
+        public GetChats(GetChats getChats, int limit) {
+            super();
+        }
+
         /**
          * @return this.CONSTRUCTOR
          */

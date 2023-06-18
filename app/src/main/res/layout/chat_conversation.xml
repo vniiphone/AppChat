@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_bar_top"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:background="@drawable/bar_top"
+        android:padding="3dp">
+
+        <ImageView
+            android:id="@+id/img_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:contextClickable="true"
+            android:src="@drawable/outline_arrow_back"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/txt_trove"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Trở về"
+            android:textColor="@color/GhostWhite"
+            android:textSize="15sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toRightOf="@id/img_back"
+            app:layout_constraintTop_toTopOf="parent" />
+        <TextView
+            android:id="@+id/txt_chat_tit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="9dp"
+            android:gravity="right"
+            android:text="ChatTitle"
+            android:textColor="@color/GhostWhite"
+            android:textSize="20sp"
+            app:layout_constraintEnd_toStartOf="@+id/img_user_avt"
+            app:layout_constraintLeft_toRightOf="@id/txt_trove"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/txt_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Online"
+            android:textColor="@color/GhostWhite"
+            android:textSize="13sp"
+            app:layout_constraintEnd_toStartOf="@+id/img_user_avt"
+            app:layout_constraintLeft_toRightOf="@id/txt_trove"
+            app:layout_constraintStart_toStartOf="@+id/txt_chat_tit"
+            app:layout_constraintTop_toBottomOf="@+id/txt_chat_tit" />
+
+        <ImageView
+            android:id="@+id/img_user_avt"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginEnd="10dp"
+            android:padding="2dp"
+            android:src="@drawable/gamer"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rcl_conversations_chat"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/layout_inputMessage"
+        android:layout_below="@id/layout_bar_top"
+        android:drawSelectorOnTop="false"
+        android:listSelector="@android:color/transparent"
+        android:padding="5dp"
+        android:scrollbarStyle="outsideOverlay"
+        android:transcriptMode="normal"></androidx.recyclerview.widget.RecyclerView>
+
+    <LinearLayout
+        android:id="@+id/layout_inputMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="@drawable/input_message_top"
+        android:orientation="horizontal"
+        android:padding="7dp">
+
+        <EditText
+            android:id="@+id/edt_message"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="5dp"
+            android:layout_weight="1"
+            android:hint="Nhập tin nhắn..."
+            android:textColor="@color/GhostWhite"
+            android:textColorHint="@color/GhostWhite"
+            android:textSize="20sp" />
+
+        <ImageView
+            android:id="@+id/img_send_message"
+            android:layout_width="40dp"
+            android:layout_height="35dp"
+            android:layout_margin="5dp"
+            android:src="@drawable/paper_plane" />
+    </LinearLayout>
+</RelativeLayout>

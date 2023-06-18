@@ -19,12 +19,17 @@ public class TDLibManager {
             client = Client.create(activity, null, null);
         }
         callback = activity;
+
         return client;
     }
 
     public interface Callback extends Client.ResultHandler {
         void onSetTdlibParametersSuccess();
+
         void onSetTdlibParametersError();
+
+        @Override
+        void onResult(TdApi.Object object);
     }
 
     public static void setTdlibParameters(Client client, Callback callback, String directoryPath) {
