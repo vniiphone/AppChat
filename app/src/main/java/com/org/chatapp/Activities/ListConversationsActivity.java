@@ -3,6 +3,7 @@ package com.org.chatapp.Activities;
 
 import static com.org.chatapp.Utils.Utils.print;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -67,16 +68,7 @@ public class ListConversationsActivity extends AppCompatActivity implements TDLi
     private static final ConcurrentMap<Long, TdApi.Chat> chats = new ConcurrentHashMap<Long, TdApi.Chat>();
     private static boolean haveFullMainChatList = false;
     private static final String newLine = System.getProperty("line.separator");
-
-
     ListChatsAdapter listChatsAdapter;
-    private TdApi.ChatList tdChats = new TdApi.ChatList() {
-        @Override
-        public int getConstructor() {
-            return TdApi.ChatListMain.CONSTRUCTOR;
-        }
-    };
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,8 +82,12 @@ public class ListConversationsActivity extends AppCompatActivity implements TDLi
 //      getChats();
         getChatDebug();
 
-        Log.d("onCreate", "Szioe Chat arrray" + chatListArray.size());
-
+      /*  Log.d("onCreate", "Szioe Chat arrray" + chatListArray.size());
+        Intent intent = new Intent(ListConversationsActivity.this, ConversationActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putString("chatIdFromPrevious", "5547360308");
+        intent.putExtras(bundle);
+        startActivity(intent);*/
 
         AnhXa();
      /*   try {
@@ -104,13 +100,19 @@ public class ListConversationsActivity extends AppCompatActivity implements TDLi
             public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
                 View childView = rv.findChildViewUnder(e.getX(), e.getY());
                 int position = rv.getChildAdapterPosition(childView);
-                if(childView != null && e.getAction() == MotionEvent.ACTION_UP) {
-                    Toast.makeText(ListConversationsActivity.this, "Chat ID: ",
+                if (childView != null && e.getAction() == MotionEvent.ACTION_UP) {
+                    long putId = chatListArray.get(position).id;
+                    String strID = String.valueOf(putId);
+                    Log.d("onCreate", "Szioe Chat arrray" + chatListArray.size());
+                    Intent intent = new Intent(ListConversationsActivity.this, ConversationActivity.class);
+                    Bundle bundle = new Bundle();
+                    bundle.putString("chatIdFromPrevious",strID);
+                    intent.putExtras(bundle);
+                    startActivity(intent);
+                    Log.d("getLichSuChatDebug", "LastMessage of List: " + chatListArray.get(position).lastMessage.id);
+                    Log.d("ChatID_onClick", "Transition Intent " + strID);
+                    Toast.makeText(ListConversationsActivity.this, "Chat ID: " + strID,
                             Toast.LENGTH_SHORT).show();
-                    Intent chatIntent = new Intent(ListConversationsActivity.this, ConversationActivity.class);
-                    Log.d("ChatID_onClick", "Transition Intent" + chatListArray.get(position).id);
-                    chatIntent.putExtra("ChatID", chatListArray.get(position).id);
-                    startActivity(chatIntent);
                 }
                 return false;
             }
@@ -242,6 +244,9 @@ public class ListConversationsActivity extends AppCompatActivity implements TDLi
                         });
                         Log.d("getChatDebug", "Chat.CONSTRUCTOR: " + chatListArray.size());
                         break;
+                    case TdApi.UpdateUser.CONSTRUCTOR:
+                        TdApi.UpdateUser updateUser = (TdApi.UpdateUser) object;
+                        TdApi.User user = updateUser.user;
                 }
             }
         });
@@ -316,6 +321,7 @@ public class ListConversationsActivity extends AppCompatActivity implements TDLi
 class ListChatsAdapter extends RecyclerView.Adapter<ListChatsAdapter.ViewHolder> {
 
     private final List<TdApi.Chat> chatList;
+    private OnItemClickListener listener;
 
     ListChatsAdapter(List<TdApi.Chat> mChatsList) {
         this.chatList = mChatsList;
@@ -379,6 +385,10 @@ class ListChatsAdapter extends RecyclerView.Adapter<ListChatsAdapter.ViewHolder>
         } else {
             holder.img_avatar.setImageResource(R.mipmap.ic_launcher_round);
         }
+    }
+
+    public interface OnItemClickListener {
+        void onItemClick(int itemId);
     }
 
     @Override

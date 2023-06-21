@@ -8,6 +8,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -27,6 +30,7 @@ import com.org.chatapp.Utils.TDLibManager;
 import org.drinkless.td.libcore.telegram.Client;
 import org.drinkless.td.libcore.telegram.TdApi;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -47,8 +51,8 @@ public class ConversationActivity extends AppCompatActivity implements TDLibMana
 
     public ArrayList<TdApi.Chat> chatList = new ArrayList<>();
     private final static String TAG = "Converstation Activity";
-    //Khai báo các thành phần trong UI
 
+    //Khai báo các thành phần trong UI
     //Top_bar
     private ConstraintLayout lout_bartop;
     private ImageView img_back, img_avt;
@@ -72,23 +76,16 @@ public class ConversationActivity extends AppCompatActivity implements TDLibMana
         setContentView(R.layout.chat_conversation);
 
         //Lấy data từ itent trước đó là (ListConversation)
+//        String id = "5547360308"; //
         long id = layChatIdFromPreviousIntent();
-        client = TDLibManager.getClient(this);
 
+        client = TDLibManager.getClient(this);
+        Log.d("onCreate-->", "ChatId from Previous Intent: " + id);
 //        Log.d("getChatLichSu", "ID lastmessage: " + lastMessageId);
-        getLichSuChat(id, 0);
-        //GetLastMessage from_id= 0
-        /*
-        long lastMessageId = getLastMessage(chatId); // trả về lastmessage ID
-           if (lastMessageId != -1) {
-            getLichSuChat(chatId, lastMessageId);
-        } else {
-            Toast.makeText(this, "Ngược lại", Toast.LENGTH_SHORT).show();
-        }*/
+        layTinNhanChat(id);
 
         AnhXaId();
-        findSDT();
-        SearchPublicChat();
+
         img_send.setOnClickListener(v -> sendMessage());
        /* client.send(new TdApi.GetChatHistory(
                         chatIddLong,
@@ -101,7 +98,6 @@ public class ConversationActivity extends AppCompatActivity implements TDLibMana
 */
         Log.d("Client:", "Client khởi tạo:" + client.toString());
         Log.d("Nhận:", "Client nhận tin nhắn của chatID:" + id);
-
         img_send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -114,17 +110,27 @@ public class ConversationActivity extends AppCompatActivity implements TDLibMana
     }
 
     public long layChatIdFromPreviousIntent() {
-        return getIntent().getLongExtra("AppChatID", 192);
+        Bundle bundle = getIntent().getExtras();
+        if (bundle == null) {
+            return 0;
+        }
+        String id = bundle.getString("chatIdFromPrevious", "Null");
+        long lngId = Long.parseLong(id);
+        Log.d("layChatIdFromPreviousIntent", "Chat ID: " + id);
+        return lngId;
     }
 
-    private long getLastMessage(long chatId) {
+   /* private long getLastMessage(long chatId) {
         getLichSuChat(chatId, 0);
-//        if (!historyMessages.isEmpty()) {
-        TdApi.Message lastMessage = historyMessages.get(0);
-        return lastMessage.id;
-//        }
-//        return -1;
-    }
+        if (!historyMessages.isEmpty()) {
+            TdApi.Message lastMessage = historyMessages.get(0);
+            Log.d("getLastMessage", "From Msg ID: " + lastMessage);
+            return lastMessage.id;
+        } else {
+            Log.d("getLastMessage", "From Msg ID: " + -1);
+            return -1;
+        }
+    }*/
 
     public void AnhXaId() {
         //Top_bar: 5 thanh phan
@@ -146,76 +152,73 @@ public class ConversationActivity extends AppCompatActivity implements TDLibMana
         img_send = findViewById(R.id.img_send_message);
         img_send.setClickable(true);
 
-
-    }
-
-
-    public void getTitle(String chatId) {
-        //Truyền ChatId(long) vào đối tượng(function) getChat để khởi tạo yêu cầu GetChat theo ChatId
-        long lngChatid = Long.parseLong(chatId);
-        TdApi.GetChat getChat = new TdApi.GetChat(lngChatid);
-        client.send(getChat, object -> {
-            if (object instanceof TdApi.Chats) {
-                TdApi.Chat chat1 = (TdApi.Chat) object;
-                tv_chat_title.setText(chat1.title);
-                Log.d(TAG, "Chat tile: " + chat1.title);
-            }
-        });
     }
 
     public void getLichSuChat(long chatId, long fromMessageId) {
-        Log.d("getChatLichSu", "Gọi hàm --> size: " + historyMessages.size());
+        Log.d("getLichSuChat", "Gọi hàm --> size: " + historyMessages.size());
 //        Log.d("getChatLichSu", "Get lịch sử tin nhắn chatId: " + chatId);
-        TdApi.GetChatHistory getChatHistory = new TdApi.GetChatHistory(chatId, fromMessageId, -1, 100, false);
-        client.send(getChatHistory, this, null);
+//        long strChatId = Long.parseLong(chatId);
+        Log.d("getLichSuChatDebug", "LastMessage: " + fromMessageId);
+        TdApi.GetChatHistory getChatHistory = new TdApi.GetChatHistory(chatId, fromMessageId, 0, 100, false);
+        client.send(getChatHistory, this::onResult);
+    }
 
+    public void layTinNhanChat(long chatId) {
+//        long strChatId = Long.parseLong(chatId);
+        TdApi.GetChat getChat = new TdApi.GetChat(chatId);
+        client.send(getChat, this::onResult);
+    }
+
+    public void returnBack(View view) {
+        Intent intent = new Intent(ConversationActivity.this, ListConversationsActivity.class);
+        startActivity(intent);
     }
 
     @Override
     public void onResult(TdApi.Object object) {
-  /*      Log.d("onResult", "Show tin nhắn");
-        getChatLichSu(chatId, 0);
-        if (object instanceof TdApi.UpdateNewMessage) {
-            TdApi.UpdateNewMessage updateNewMessage = (TdApi.UpdateNewMessage) object;
-            TdApi.Message message = updateNewMessage.message;
-            Log.d(TAG, "Received new message: " + message.content.toString());
-            String messageText = "Received message: " + message.content.toString();
-//            appendMessageToTextView(messageText);
-            runOnUiThread(() -> {
-                // Add the new message to the top of the list
-//                appendMessageToTextView2(messageText);
-                messageList.add(0, message);
-                conversationChatAdapter.notifyItemInserted(0);
-                // Scroll RecyclerView to the top to display the new message
-                recyclerViewConversation.scrollToPosition(0);
-            });
-        } else {
-            Log.e(TAG, "Unexpected result: " + object);
-        }*/
-        Log.d("getChatLichSu", "Size: " + historyMessages.size());
         switch (object.getConstructor()) {
             case TdApi.Messages.CONSTRUCTOR:
                 TdApi.Messages m = (TdApi.Messages) object;
                 Collections.addAll(historyMessages, m.messages);
                 Collections.reverse(historyMessages);
-                Log.d("getChatLichSu", "Size after AddAll: " + historyMessages.size());
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        conversationChatAdapter.refresh();
-                    }
-                });
+                Log.d("onResult->", "Messages.CONSTRUCTOR: Size after AddAll: " + historyMessages.size());
+                runOnUiThread(() -> conversationChatAdapter.refresh());
 
             case TdApi.UpdateChatLastMessage.CONSTRUCTOR:
                 TdApi.UpdateNewMessage updateNewMessage = (TdApi.UpdateNewMessage) object;
                 TdApi.Message message = updateNewMessage.message;
-                Log.d("getChatLichSu", "Size after update Chat message: " + historyMessages.size());
+                Log.d("onResult->", "Size after update Chat message: " + historyMessages.size());
                 runOnUiThread(() -> {
                     historyMessages.add(0, message);
                     conversationChatAdapter.notifyItemInserted(0);
                     // Scroll RecyclerView to the top to display the new message
                     recyclerViewConversation.scrollToPosition(0);
                 });
+            case TdApi.Chat.CONSTRUCTOR: {
+                TdApi.Chat chat = (TdApi.Chat) object;
+
+                Log.d("onResult->", "Chat.Lastmessage " + chat.lastMessage);
+                getLichSuChat(chat.id, chat.lastMessage.id);
+                runOnUiThread(() -> {
+                    conversationChatAdapter.notifyItemInserted(0);
+                    // Scroll RecyclerView to the top to display the new message
+                    recyclerViewConversation.scrollToPosition(0);
+                });
+                if (chat != null) {
+                    File imgFile = new File(chat.photo.small.local.path);
+                    if (imgFile.exists()) {
+                        Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+                        img_avt.setImageBitmap(myBitmap);
+                        tv_chat_title.setText(chat.title);
+                    }
+                } else {
+                    img_avt.setImageResource(R.mipmap.ic_launcher_round);
+                    tv_chat_title.setText("Chat Title");
+                }
+            }
+            break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + object.getConstructor());
         }
     }
 
@@ -238,12 +241,12 @@ public class ConversationActivity extends AppCompatActivity implements TDLibMana
             sendMessage.replyToMessageId = 0;
             // Gửi yêu cầu SendMessage đến TDLib
             String strMes = sendMessage.toString();
-            Log.d(TAG, "strMes: " + strMes);
+            Log.d("sendMessage-->", "strMes: " + strMes);
             client.send(sendMessage, object -> {
                 if (object instanceof TdApi.Message) {
                     // Tin nhắn đã được gửi thành công
                     TdApi.Message sentMessage = (TdApi.Message) object;
-                    Log.d(TAG, "Message sent: " + sentMessage.content.toString());
+                    Log.d("sendMessage-->", "Message sent: " + sentMessage.content.toString());
                     // Hiển thị tin nhắn đã gửi trong TextView
                     String message1 = "Sent message: " + sentMessage.content.toString();
 //                    appendMessageToTextView(message1);
@@ -257,7 +260,7 @@ public class ConversationActivity extends AppCompatActivity implements TDLibMana
                     });
                 } else {
                     // Xử lý các trạng thái, lỗi hoặc kết quả không mong đợi khác từ TDLib
-                    Log.e(TAG, "Unexpected result: " + object);
+                    Log.e("sendMessage-->", "Unexpected result: " + object);
                 }
             });
         } else Toast.makeText(this, "Nhập tin nhắn", Toast.LENGTH_SHORT).show();
@@ -395,7 +398,6 @@ class ConversationChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
         this.messageList = messageList;
     }
 
-
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 //        LinearLayout linearLayout = (LinearLayout) LayoutInflater.from(parent.getContext()).inflate(R.layout.itemview_chat, parent, false);
@@ -454,8 +456,6 @@ class ConversationChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
                 imOtherViewHolder.time.setText(formattedDateTime);
             }
         }
-
-
     }
 
     public class ImOtherViewHolder extends RecyclerView.ViewHolder {
@@ -487,31 +487,5 @@ class ConversationChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
         notifyDataSetChanged();
     }
 
-   /* static class ConversationChatHolder extends RecyclerView.ViewHolder {
-        LinearLayout linearLayout;
-        TextView tvMessage, tvTime;
 
-
-        ConversationChatHolder(@NonNull LinearLayout itemView) {
-            super(itemView);
-            linearLayout = itemView;
-            tvMessage = linearLayout.findViewById(R.id.txt);
-            tvTime = linearLayout.findViewById(R.id.txt_time_message);
-        }
-    }*/
 }
-
-/*
-class ConversationChatHolder extends RecyclerView.ViewHolder {
-
-    //khai báo layout của item of RecycleView
-    LinearLayout layout;
-    TextView tvMessage, tvTime;
-
-    public ConversationChatHolder(@NonNull View itemView) {
-        super(itemView);
-        layout = (LinearLayout) itemView;
-        tvMessage = layout.findViewById(R.id.txt_message_item);
-        tvTime = layout.findViewById(R.id.txt_time_message);
-    }
-}*/
