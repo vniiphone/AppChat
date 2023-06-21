@@ -18,18 +18,25 @@
         <activity
             android:name=".Activities.ListChatsActivity"
             android:exported="false" />
-        <activity
+      <activity
             android:name=".Activities.ListConversationsActivity"
             android:exported="false" />
-        <activity
-            android:name=".Activities.TestChatV1Activity"
-            android:exported="false" />
+       <!-- <activity
+            android:name=".Activities.SearchableActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
+        </activity>-->
         <activity
             android:name=".Activities.RegistrationActivity"
             android:exported="false" />
-        <activity
+       <!-- <activity
             android:name=".Activities.LoadActivity"
-            android:exported="false" />
+            android:exported="false" />-->
         <activity
             android:name=".Activities.LoginActivity"
             android:exported="false" />

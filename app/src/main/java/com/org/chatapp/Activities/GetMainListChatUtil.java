@@ -14,6 +14,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+/*
 public class GetMainListChatUtil implements TDLibManager.Callback {
     private static final ConcurrentMap<Long, TdApi.Chat> chats = new ConcurrentHashMap<Long, TdApi.Chat>();
     private static final NavigableSet<OrderedChat> mainChatList = new TreeSet<OrderedChat>();
@@ -92,7 +93,12 @@ public class GetMainListChatUtil implements TDLibManager.Callback {
 
     }
 
-static class OrderedChat implements Comparable<ListChatsActivity.OrderedChat> {
+    @Override
+    public void onUonUpdatesReceived(TdApi.Object update) {
+
+    }
+
+    static class OrderedChat implements Comparable<ListChatsActivity.OrderedChat> {
     final long chatId;
     final TdApi.ChatPosition position;
 
@@ -119,3 +125,4 @@ static class OrderedChat implements Comparable<ListChatsActivity.OrderedChat> {
     }
 }
 }
+*/

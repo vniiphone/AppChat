@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout_chat_item"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="5dp"
+    android:layout_marginTop="10dp"
+    android:layout_marginEnd="5dp"
+    android:background="@drawable/bg_item_chats"
+    android:padding="10dp">
+
+    <ImageView
+        android:id="@+id/img_chats_avt_item"
+        android:layout_width="55dp"
+        android:layout_height="55dp"
+        android:layout_centerVertical="true"
+        android:layout_marginStart="3dp"
+        android:src="@drawable/gamer" />
+
+    <TextView
+        android:id="@+id/txt_chats_title_item"
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="5dp"
+        android:layout_toRightOf="@id/img_chats_avt_item"
+        android:text="Title Chat Moojt casi tittile that dai"
+        android:textColor="@color/cardview_dark_background"
+        android:textSize="19sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/txt_chats_time_item"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_toRightOf="@id/txt_chats_title_item"
+        android:gravity="center"
+        android:text="59:41"
+        android:textColor="@color/Plain_purple"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/txt_chats_last_message_content_item"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/txt_chats_title_item"
+        android:layout_marginStart="5dp"
+        android:layout_toRightOf="@id/img_chats_avt_item"
+        android:text="message content"
+        android:textColor="@color/cardview_dark_background"
+        android:textSize="19sp" />
+
+</RelativeLayout>

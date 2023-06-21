@@ -1,3 +1,4 @@
+/*
 package com.org.chatapp.Activities;
 
 import androidx.annotation.Nullable;
@@ -455,7 +456,8 @@ public class TestChatV1Activity extends AppCompatActivity {
                 TestChatV1Activity.authorizationState = authorizationState;
             }
             switch (TestChatV1Activity.authorizationState.getConstructor()) {
-                /*case TdApi.AuthorizationStateWaitTdlibParameters.CONSTRUCTOR:
+                */
+/*case TdApi.AuthorizationStateWaitTdlibParameters.CONSTRUCTOR:
                     TdApi.SetTdlibParameters request = new TdApi.SetTdlibParameters();
                     request. = "tdlib";
                     request.useMessageDatabase = true;
@@ -468,7 +470,8 @@ public class TestChatV1Activity extends AppCompatActivity {
                     request.enableStorageOptimizer = true;
 
                     client.send(request, new AuthorizationRequestHandler());
-                    break;*/
+                    break;*//*
+
                 case TdApi.AuthorizationStateWaitPhoneNumber.CONSTRUCTOR: {
                     String phoneNumber = promptString("Please enter phone number: ");
                     client.send(new TdApi.SetAuthenticationPhoneNumber(phoneNumber, null), new AuthorizationRequestHandler());
@@ -530,3 +533,4 @@ public class TestChatV1Activity extends AppCompatActivity {
 
 }
 
+*/

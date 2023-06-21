@@ -1,3 +1,4 @@
+/*
 package com.org.chatapp.Activities;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -68,7 +69,6 @@ public class ListChatsActivity extends AppCompatActivity implements TDLibManager
     private static void getChatPostion() {
         Log.d("getChatPostion", "getChatPostion.1 Khởi chạy ");
         TdApi.UpdateChatPosition updateChatPosition = new TdApi.UpdateChatPosition();
-
     }
 
     public static void getMainChatList(final int limit) {
@@ -166,4 +166,9 @@ public class ListChatsActivity extends AppCompatActivity implements TDLibManager
     public void onResult(TdApi.Object object) {
         Log.d("onResult", "onResult: " + object);
     }
-}
+
+    @Override
+    public void onUonUpdatesReceived(TdApi.Object update) {
+
+    }
+}*/

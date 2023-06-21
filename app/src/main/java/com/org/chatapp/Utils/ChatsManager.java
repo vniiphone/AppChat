@@ -61,4 +61,9 @@ public class ChatsManager implements TDLibManager.Callback {
                 TdApi.User user = updateUser.user;
         }
     }
+
+    @Override
+    public void onUonUpdatesReceived(TdApi.Object update) {
+
+    }
 }

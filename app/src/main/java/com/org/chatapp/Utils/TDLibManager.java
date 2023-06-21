@@ -30,6 +30,26 @@ public class TDLibManager {
 
         @Override
         void onResult(TdApi.Object object);
+
+        void onUonUpdatesReceived(TdApi.Object update);
+    }
+    public void onUpdatesReceived(TdApi.Object update) {
+        // Xử lý cập nhật
+        if (update instanceof TdApi.UpdateNewMessage) {
+            // Xử lý cập nhật tin nhắn mới
+            TdApi.UpdateNewMessage updateNewMessage = (TdApi.UpdateNewMessage) update;
+            TdApi.Message message = updateNewMessage.message;
+            // ...
+        } else if (update instanceof TdApi.UpdateChatLastMessage) {
+            // Xử lý cập nhật tin nhắn cuối cùng trong cuộc trò chuyện
+            TdApi.UpdateChatLastMessage updateChatLastMessage = (TdApi.UpdateChatLastMessage) update;
+            // ...
+        } else if (update instanceof TdApi.UpdateChatReadInbox) {
+            // Xử lý cập nhật trạng thái tin nhắn đã đọc trong cuộc trò chuyện
+            TdApi.UpdateChatReadInbox updateChatReadInbox = (TdApi.UpdateChatReadInbox) update;
+            // ...
+        }
+
     }
 
     public static void setTdlibParameters(Client client, Callback callback, String directoryPath) {

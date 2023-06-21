@@ -68,7 +68,7 @@ public class LoginActivity extends AppCompatActivity implements TDLibManager.Cal
                  * Gửi OTP cho TDLib để gửi cho máy chủ Telegram. Bạn có thể sử dụng phương thức
                  * client.send() để gửi yêu cầu xác thực sử dụng OTP đến máy chủ Telegram
                  */
-                Log.d("CheckSDT_DangNhap()","CheckSDT(strSDT): "+strSDT);
+                Log.d("CheckSDT_DangNhap()", "CheckSDT(strSDT): " + strSDT);
                 TdApi.PhoneNumberAuthenticationSettings authenticationSettings = new TdApi.PhoneNumberAuthenticationSettings();
                 authenticationSettings.allowFlashCall = true;
                 authenticationSettings.isCurrentPhoneNumber = true;
@@ -106,10 +106,9 @@ public class LoginActivity extends AppCompatActivity implements TDLibManager.Cal
             // Xác thực thành công
             // Xử lý và chuyển hướng đến màn hình ConversationActivity
             Log.d("LoginActivity", "onResult: Xác thực thành công -> GO TO TEST");
-            Intent intent = new Intent(LoginActivity.this, TestChatV1Activity.class);
+            Intent intent = new Intent(LoginActivity.this, ListConversationsActivity.class);
             startActivity(intent);
             finish();
-
             // Lấy Token từ kết quả xác thực
             String token = tokenStorage.getAccessToken(); // Lấy Token từ kết quả xác thực
             // Lưu trữ token
@@ -123,6 +122,11 @@ public class LoginActivity extends AppCompatActivity implements TDLibManager.Cal
             // Xử lý các kết quả khác từ TDLib
             Log.d("LoginActivity", "onResult: xử lý kết quả từ TDLib");
         }
+
+    }
+
+    @Override
+    public void onUonUpdatesReceived(TdApi.Object update) {
 
     }
 

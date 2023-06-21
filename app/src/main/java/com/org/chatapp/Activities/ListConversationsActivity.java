@@ -1,14 +1,12 @@
 package com.org.chatapp.Activities;
 
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import static com.org.chatapp.Utils.Utils.print;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -16,8 +14,14 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.org.chatapp.R;
 import com.org.chatapp.Utils.TDLibManager;
@@ -26,55 +30,86 @@ import org.drinkless.td.libcore.telegram.Client;
 import org.drinkless.td.libcore.telegram.TdApi;
 
 import java.io.File;
+import java.text.ParseException;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 import java.util.NavigableSet;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CountDownLatch;
 
 public class ListConversationsActivity extends AppCompatActivity implements TDLibManager.Callback {
     public static Client client;
     public final String TAG = "ListConversationsActivity";
     RecyclerView recyclerView_conversation_listChat;
-    public ArrayList<TdApi.Chat> chatList = new ArrayList<>();
-    ConversationAdapter conversationAdapter;
+    public static ArrayList<TdApi.Chat> chatListArray;
+//    public static ArrayList<TdApi.Chat> chatListArrayDummy = new ArrayList<>();
+
+    private static TdApi.AuthorizationState authorizationState = null;
+    private static volatile boolean haveAuthorization = false;
+    private static volatile boolean needQuit = false;
+    private static volatile boolean canQuit = false;
+
+    private static final ConcurrentMap<Long, TdApi.User> users = new ConcurrentHashMap<Long, TdApi.User>();
+    private static final ConcurrentMap<Long, TdApi.BasicGroup> basicGroups = new ConcurrentHashMap<Long, TdApi.BasicGroup>();
+    private static final ConcurrentMap<Long, TdApi.Supergroup> supergroups = new ConcurrentHashMap<Long, TdApi.Supergroup>();
+    private static final ConcurrentMap<Integer, TdApi.SecretChat> secretChats = new ConcurrentHashMap<Integer, TdApi.SecretChat>();
+
     private static final NavigableSet<OrderedChat> mainChatList = new TreeSet<OrderedChat>();
+    private static final ConcurrentMap<Long, TdApi.Chat> chats = new ConcurrentHashMap<Long, TdApi.Chat>();
     private static boolean haveFullMainChatList = false;
     private static final String newLine = System.getProperty("line.separator");
-    public int countChats = 0;
-    public TextView txt_count;
+
+
+    ListChatsAdapter listChatsAdapter;
+    private TdApi.ChatList tdChats = new TdApi.ChatList() {
+        @Override
+        public int getConstructor() {
+            return TdApi.ChatListMain.CONSTRUCTOR;
+        }
+    };
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_conversations);
-        AnhXa();
-        Log.d("onCreate", "1. Khởi tạo client");
-        client = TDLibManager.getClient(this);
-//        getMainChatList(0);
-        TdApi.GetChats chats = new TdApi.GetChats();
-        chats.limit = 1000;
 
+        client = TDLibManager.getClient(this);
         haveFullMainChatList = false;
 
-//        client.send(chats, this::onResult);
+        chatListArray = new ArrayList<>();
+//      getChats();
+        getChatDebug();
 
-        Log.d(TAG, "Trước khi GetChat Tại OnCreate " + chatList.size());
-        getChats();
-        synchronized (chatList) {
-            for (TdApi.Chat chat : chatList) {
-                Log.d(TAG, "Chat: " + chat.title + " lastMessage: " + chat.title);
-            }
-        }
+        Log.d("onCreate", "Szioe Chat arrray" + chatListArray.size());
+
+
+        AnhXa();
+     /*   try {
+            createDummyData();
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }*/
         recyclerView_conversation_listChat.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
             @Override
             public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
                 View childView = rv.findChildViewUnder(e.getX(), e.getY());
                 int position = rv.getChildAdapterPosition(childView);
-                if (childView != null && e.getAction() == MotionEvent.ACTION_UP) {
+                if(childView != null && e.getAction() == MotionEvent.ACTION_UP) {
+                    Toast.makeText(ListConversationsActivity.this, "Chat ID: ",
+                            Toast.LENGTH_SHORT).show();
                     Intent chatIntent = new Intent(ListConversationsActivity.this, ConversationActivity.class);
-                    Log.d("ChatID_onClick", "" + chatList.get(position).id);
-                    chatIntent.putExtra("ChatID", chatList.get(position).id);
+                    Log.d("ChatID_onClick", "Transition Intent" + chatListArray.get(position).id);
+                    chatIntent.putExtra("ChatID", chatListArray.get(position).id);
                     startActivity(chatIntent);
                 }
                 return false;
@@ -87,33 +122,93 @@ public class ListConversationsActivity extends AppCompatActivity implements TDLi
 
             @Override
             public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
-
             }
         });
-
-      /*  Log.d("onCreate", "2. Khởi tạo GetChats");
-        TdApi.LoadChats loadChats = new TdApi.LoadChats();
-        Log.d("onCreate", "3. Khởi tạo ChatList");
-       TdApi.ChatList chatList1 = new TdApi.ChatListMain();
-        client.send(new TdApi.LoadChats(chatList1, 100), this, null);
-      Log.d("onCreate", "4. Yêu cầu loadChats: "+loadChats.chatList);
-       client.send(new TdApi.GetChats(getChats, 100),this,null);
-        Log.d("onCreate", "5. Yêu cầu  client \nĐộ dài: " + chatList1);
-*/
-
     }
 
     private void AnhXa() {
-        txt_count = findViewById(R.id.txt_countNumber);
-        recyclerView_conversation_listChat = (RecyclerView) findViewById(R.id.recyclerview_conversation);
+        recyclerView_conversation_listChat = findViewById(R.id.recyclerview_conversation);
         recyclerView_conversation_listChat.setLayoutManager(new LinearLayoutManager(this));
-        conversationAdapter = new ConversationAdapter(chatList);
-        recyclerView_conversation_listChat.setAdapter(conversationAdapter);
+        listChatsAdapter = new ListChatsAdapter(chatListArray);
+        recyclerView_conversation_listChat.setAdapter(listChatsAdapter);
     }
 
+    public void getChats() {
+/*
+        - Tạo một danh sách mới updatedChatList để chứa các cuộc trò chuyện được cập nhật.
+        - Sử dụng CountDownLatch để đợi tất cả các yêu cầu GetChat hoàn thành trước khi cập
+         nhật giao diện người dùng.
+        - Trong vòng lặp for, bạn gửi một yêu cầu GetChat cho mỗi chatID. Khi nhận được kết quả,
+         bạn kiểm tra xem đối tượng có phải là TdApi.Chat và thêm vào updatedChatList.
+        - Sau khi tất cả các yêu cầu GetChat hoàn thành, bạn xóa toàn bộ dữ liệu cũ trong chatListArray,
+         thêm tất cả các cuộc trò chuyện mới vào chatListArray và cập nhật giao diện người dùng thông qua adapter.*/
+        synchronized (chatListArray) {
+            if (!haveFullMainChatList && 100 > mainChatList.size()) {
+                client.send(new TdApi.LoadChats(new TdApi.ChatListMain(), 100 - chatListArray.size()), object -> {
+                    //return TdApi.ChatListMain.CONSTRUCTOR;
+                    switch (object.getConstructor()) {
+                        case TdApi.Error.CONSTRUCTOR:
+                            if (((TdApi.Error) object).code == 404) {
+                                synchronized (chatListArray) {
+                                    haveFullMainChatList = true;
+                                    Log.d("getChats()", "404: " + "\nChat array: " + chatListArray.size() + "\nObject: " + object);
+                                }
+                            } else {
+                                Log.d("getChats()", "Else: error");
+                                System.err.println("Receive an error for LoadChats:" + newLine + object);
+                            }
+                            break;
+                        case TdApi.Chat.CONSTRUCTOR: // Xử lý khi nhận được đối tượng Chat
+                       /* TdApi.Chat chat = (TdApi.Chat) object;
+                        chatListArray.add(chat);*/
+                            Log.d("getChats()", "Received chat -> chatListArray : " + chatListArray.size());
+                            break;
+                        case TdApi.Chats.CONSTRUCTOR:
+                            Log.d("getChats()", "Received chats: " + object);
+                            long chatIDs[] = ((TdApi.Chats) object).chatIds;
+                            List<TdApi.Chat> updatedChatList = new ArrayList<>();
 
-    public ArrayList<TdApi.Chat> getChats() {
-        Log.d(TAG, "getChats: " + chatList.size());
+                            CountDownLatch latch = new CountDownLatch(chatIDs.length);
+
+                            for (long chatID : chatIDs) {
+                                client.send(new TdApi.GetChat(chatID), chatObject -> {
+                                    if (chatObject instanceof TdApi.Chat) {
+                                        TdApi.Chat chat = (TdApi.Chat) chatObject;
+                                        updatedChatList.add(chat);
+                                        Log.d("getChats()", "add(chat): " + chat);
+                                    }
+                                    latch.countDown();
+                                });
+                            }
+
+                            try {
+                                latch.await();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+
+                            runOnUiThread(() -> {
+                                chatListArray.clear();
+                                chatListArray.addAll(updatedChatList);
+                                listChatsAdapter.notifyDataSetChanged();
+                            });
+                            break;
+                        case TdApi.Ok.CONSTRUCTOR:
+                            Log.d("getChats()", "Received OK: sysout Object " + object);
+                            getChats();
+                            break;
+                        default:
+                            System.err.println("Receive wrong response from TDLib:" + newLine + object);
+                    }
+                });
+            }
+            return;
+        }
+
+    }
+
+    public ArrayList<TdApi.Chat> getChatDebug() {
+        Log.d(TAG, "getChats: " + this.chatListArray.size());
         client.send(new TdApi.GetChats(new TdApi.ChatList() {
             @Override
             public int getConstructor() {
@@ -124,131 +219,43 @@ public class ListConversationsActivity extends AppCompatActivity implements TDLi
             public void onResult(TdApi.Object object) {
                 switch (object.getConstructor()) {
                     case TdApi.Error.CONSTRUCTOR:
-                        Log.d(TAG, "Error.CONSTRUCTOR: " + object);
+                        Log.d("getChatDebug", "Error.CONSTRUCTOR: " + object);
                         break;
                     case TdApi.Chats.CONSTRUCTOR:
                         long chatIDs[] = ((TdApi.Chats) object).chatIds;
-                        Log.d(TAG, "Chats.CONSTRUCTOR: " + object + " Chat size: "+ Arrays.stream(chatIDs).count());
-                        txt_count.setText("4");
+                        Log.d("getChatDebug", "Chats.CONSTRUCTOR: " + object + " Chat size: " + Arrays.stream(chatIDs).count());
                         for (long chatID : chatIDs) {
-                            Log.d(TAG, "onResult: " + chatID);
-                            client.send(new TdApi.GetChat(chatID), this, null);
+                            Log.d("getChatDebug", "onResult: " + chatID);
+                            client.send(new TdApi.GetChat(chatID), this::onResult);
                         }
-                        Log.d(TAG, "onResult: " + chatIDs.toString());
+                        Log.d("getChatDebug", "onResult: " + chatIDs.toString());
                         break;
                     case TdApi.Chat.CONSTRUCTOR:
-                        Log.d(TAG, "Chat.CONSTRUCTOR: " + object);
+                        Log.d("getChatDebug", "Chat.CONSTRUCTOR: " + object);
                         TdApi.Chat myChat = ((TdApi.Chat) object);
-                        chatList.add(myChat);
-                        Log.d(TAG, "Chat.CONSTRUCTOR: " + chatList.size());
-                        countChats = chatList.size();
+                        chatListArray.add(myChat);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                listChatsAdapter.refresh();
+                            }
+                        });
+                        Log.d("getChatDebug", "Chat.CONSTRUCTOR: " + chatListArray.size());
                         break;
                 }
             }
         });
-        return chatList;
-    }
-
-    private static void getMainChatList(final int limit) {
-        synchronized (mainChatList) {
-          /*  Log.d("getMainChatList", "3.1. synchronized (mainChatList) \n");
-            TdApi.ChatList chatListMain = new TdApi.ChatListMain();
-            TdApi.ChatList chatListArchive = new TdApi.ChatListArchive();
-
-            //LoadChats
-            TdApi.LoadChats loadChats1 = new TdApi.LoadChats(chatListMain, limit - mainChatList.size());
-            client.send(loadChats1, object -> {
-                Log.d("loadChats1", "ChatListMain: \n" + chatListMain);
-//                txt_count.setText("Trò chuyện: " + chatListMain);
-            }, null);
-
-*/
-            //GetChats
-//            TdApi.Chats chats[] = new TdApi.Chats[100];
-
-
-//            TdApi.Chat
-/*
-            //Send LoadChat request
-            client.send(new TdApi.LoadChats(new TdApi.ChatListMain(), limit - mainChatList.size()), new Client.ResultHandler() {
-                @Override
-                public void onResult(TdApi.Object object) {
-                    switch (object.getConstructor()) {
-                        case TdApi.Error.CONSTRUCTOR:
-                            if (((TdApi.Error) object).code == 404) {
-                                synchronized (mainChatList) {
-                                    Log.d("getMainChatList", "3.2. code == 404) \n");
-                                    haveFullMainChatList = true;
-                                    txt_count.setText("Trò chuyện: " + mainChatList.size());
-                                }
-                            } else {
-                                System.err.println("Receive an error for LoadChats:" + newLine + object);
-                            }
-                            break;
-                        case TdApi.Ok.CONSTRUCTOR:
-                            // chats had already been received through updates, let's retry request
-                            getMainChatList(limit);
-                            Log.d("getMainChatList", "3.3. chats had already been received through updates, let's retry request");
-                            break;
-                        default:
-                            System.err.println("Receive wrong response from TDLib:" + newLine + object);
-                    }
-                }
-            });*/
-        }
-    }
-
-    @Override
-    public void onSetTdlibParametersSuccess() {
-        Log.d("onSetTdlibParametersSuccess", "Success");
-    }
-
-    @Override
-    public void onSetTdlibParametersError() {
-        Log.d("onSetTdlibParametersError", "Error");
+        return chatListArray;
     }
 
     @Override
     public void onResult(TdApi.Object object) {
-        Log.d("onResult", "onResult\n");
-        /*if (object instanceof TdApi.Chats) {
-            TdApi.Chats chats = (TdApi.Chats) object;
-            Log.d("onResul","21. if (object instanceof TdApi.Chats)");
-            long[] chatIds = chats.chatIds;
-            for (long chatId : chatIds) {
-                Log.d("onResul","22. Chats): "+chatId);
-                TdApi.GetChat getChat = new TdApi.GetChat(chatId);
-                client.send(getChat, this, null);
+        Log.d("onResult->", "OnResult: " + object.toString());
+    }
 
-            }
-        } else if (object instanceof TdApi.Chat) {
-            TdApi.Chat chat = (TdApi.Chat) object;
-            Log.d("onResul","23. else if (object instanceof TdApi.Chat) ");
-            chatList.add(chat);
-            if (chat.photo != null && chat.photo.small != null) {
-                TdApi.File smallPhoto = chat.photo.small;
-                int priority = 1;
-                int offset = 0;
-                int limit = 0;
-                boolean synchronous = false;
-                TdApi.DownloadFile downloadFile = new TdApi.DownloadFile(smallPhoto.id, priority, offset, limit, synchronous);
-                client.send(downloadFile, object1 -> {
-                    if (object1 instanceof TdApi.File) {
-                        TdApi.File downloadedFile = (TdApi.File) object1;
-                        String filePath = downloadedFile.local.path;
-                        if (filePath != null && !filePath.isEmpty()) {
-                            File imgFile = new File(filePath);
-                            if (imgFile.exists()) {
-                                Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
-                                runOnUiThread(() -> conversationAdapter.refresh());
-                            }
-                        }
-                    }
-                }, null);
-            } else {
-                runOnUiThread(() -> conversationAdapter.refresh());
-            }
-        }*/
+    @Override
+    public void onUonUpdatesReceived(TdApi.Object update) {
+
     }
 
 
@@ -290,60 +297,87 @@ public class ListConversationsActivity extends AppCompatActivity implements TDLi
             OrderedChat o = (OrderedChat) obj;
             return this.chatId == o.chatId && this.position.order == o.position.order;
         }
+
+    }
+
+    @Override
+    public void onSetTdlibParametersSuccess() {
+        Log.d("onSetTdlibParametersSuccess", "Success");
+    }
+
+    @Override
+    public void onSetTdlibParametersError() {
+        Log.d("onSetTdlibParametersError", "Error");
     }
 
 }
 
-class ConversationAdapter extends RecyclerView.Adapter<ConversationViewHolder> {
-    private final String TAG = "ConversationAdapter";
-    private ArrayList<TdApi.Chat> chatList;
-    private Client client;
 
-    ConversationAdapter(ArrayList<TdApi.Chat> chatList) {
-        this.chatList = chatList;
-        this.client = client; // Lưu trữ client
+class ListChatsAdapter extends RecyclerView.Adapter<ListChatsAdapter.ViewHolder> {
+
+    private final List<TdApi.Chat> chatList;
+
+    ListChatsAdapter(List<TdApi.Chat> mChatsList) {
+        this.chatList = mChatsList;
     }
+
 
     @NonNull
     @Override
-    public ConversationViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-       /* LinearLayout linearLayout = (LinearLayout) LayoutInflater.from(parent.getContext()).inflate(R.layout.itemview_conversation, parent, false);
-        return new ConversationViewHolder(linearLayout);
-*/
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.itemview_conversation, parent, false);
-        return new ConversationViewHolder(view);
+    public ListChatsAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        return new ViewHolder(LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.itemview_chats, parent, false));
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
-    public void onBindViewHolder(@NonNull ConversationViewHolder holder, int position) {
-        TdApi.Chat chat = chatList.get(position);
-        holder.name.setText(chat.title);
-        if (chat.photo != null && chat.photo.small != null) {
-            TdApi.File smallPhoto = chat.photo.small;
-            int priority = 1;
-            int offset = 0;
-            int limit = 0;
-            boolean synchronous = false;
-            TdApi.DownloadFile downloadFile = new TdApi.DownloadFile(smallPhoto.id, priority, offset, limit, synchronous);
-            client.send(downloadFile, new Client.ResultHandler() {
-                @Override
-                public void onResult(TdApi.Object object) {
-                    if (object instanceof TdApi.File) {
-                        TdApi.File downloadedFile = (TdApi.File) object;
-                        String filePath = downloadedFile.local.path;
-                        if (filePath != null && !filePath.isEmpty()) {
-                            File imgFile = new File(filePath);
-                            if (imgFile.exists()) {
-                                Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
-                                // Gửi thông điệp cập nhật giao diện đến handler của activity
+    public void onBindViewHolder(@NonNull ListChatsAdapter.ViewHolder holder, int position) {
 
-                            }
-                        }
-                    }
-                }
-            }, null);
+        TdApi.Chat chat = chatList.get(position);
+        long timestamp = chatList.get(position).lastMessage.date;
+
+// Convert the timestamp to an Instant
+        Instant instant = Instant.ofEpochSecond(timestamp);
+
+// Convert the Instant to a LocalDateTime in the Vietnam time zone
+        ZoneId vietnamTimeZone = ZoneId.of("Asia/Ho_Chi_Minh");
+        LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, vietnamTimeZone);
+
+// Format the LocalDateTime as a String
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+        String formattedDateTime = localDateTime.format(formatter);
+
+        holder.txt_title.setText(chat.title);
+//        holder.txt_last_message_content.setText(((TdApi.MessageContent) chat.lastMessage.content));
+
+        if (chat.lastMessage.content instanceof TdApi.MessageText) {
+            //Kiểm tra có phải kiểu content không trong hàm onBindViewHolder
+            TdApi.MessageText messageText = (TdApi.MessageText) chat.lastMessage.content;
+            holder.txt_last_message_content.setText(messageText.text.text);
+
+            String lastMessageContent = messageText.text.text.toString();
+            int maxLength = 29; // Giới hạn độ dài của nội dung
+
+            if (lastMessageContent.length() > maxLength) {
+                lastMessageContent = lastMessageContent.substring(0, maxLength) + "...";
+            }
+
+            holder.txt_last_message_content.setText(lastMessageContent);
+
         } else {
-            holder.profile.setImageResource(R.drawable.ic_launcher_background);
+            // Xử lý cho các kiểu nội dung tin nhắn khác
+            holder.txt_last_message_content.setText("Not instanceof");
+        }
+        holder.txt_time.setText(formattedDateTime);
+        if (chatList.get(position).photo != null) {
+            File imgFile = new File(chatList.get(position).photo.small.local.path);
+            if (imgFile.exists()) {
+                Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+                holder.img_avatar.setImageBitmap(myBitmap);
+            }
+
+        } else {
+            holder.img_avatar.setImageResource(R.mipmap.ic_launcher_round);
         }
     }
 
@@ -351,18 +385,28 @@ class ConversationAdapter extends RecyclerView.Adapter<ConversationViewHolder> {
     public int getItemCount() {
         return chatList.size();
     }
+
+    private boolean isChatListEmpty() {
+        return chatList == null || chatList.isEmpty();
+    }
+
     public void refresh() {
         notifyDataSetChanged();
     }
-}
 
-class ConversationViewHolder extends RecyclerView.ViewHolder {
-    TextView name;
-    ImageView profile;
+    public class ViewHolder extends RecyclerView.ViewHolder {
+        private TextView txt_title, txt_time, txt_last_message_content;
+        private ImageView img_avatar;
 
-    public ConversationViewHolder(@NonNull View itemView) {
-        super(itemView);
-        name = itemView.findViewById(R.id.textView_name);
-        profile = itemView.findViewById(R.id.dp);
+        public ViewHolder(@NonNull View itemView) {
+            super(itemView);
+
+            txt_title = itemView.findViewById(R.id.txt_chats_title_item);
+            txt_time = itemView.findViewById(R.id.txt_chats_time_item);
+            txt_last_message_content = itemView.findViewById(R.id.txt_chats_last_message_content_item);
+            img_avatar = itemView.findViewById(R.id.img_chats_avt_item);
+        }
     }
 }
+
+

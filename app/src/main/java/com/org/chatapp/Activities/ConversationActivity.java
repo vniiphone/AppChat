@@ -1,19 +1,23 @@
 package com.org.chatapp.Activities;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,9 +28,15 @@ import org.drinkless.td.libcore.telegram.Client;
 import org.drinkless.td.libcore.telegram.TdApi;
 
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 
 /*
@@ -34,11 +44,9 @@ import java.util.List;
  * */
 public class ConversationActivity extends AppCompatActivity implements TDLibManager.Callback {
     public Client client;
-    List<TdApi.Chat> listChat;
 
     public ArrayList<TdApi.Chat> chatList = new ArrayList<>();
     private final static String TAG = "Converstation Activity";
-
     //Khai báo các thành phần trong UI
 
     //Top_bar
@@ -55,10 +63,8 @@ public class ConversationActivity extends AppCompatActivity implements TDLibMana
     private EditText edt_message;
     private ImageView img_send;
 
-    //Cac bien can thiet
     private static final boolean haveFullMainChatList = false;
-    private final String chatId = "5547360308"; // Thay thế YOUR_CHAT_ID bằng chatId tương ứng
-    private List<TdApi.Message> historyMessages = new ArrayList<>();
+    private final List<TdApi.Message> historyMessages = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,16 +72,15 @@ public class ConversationActivity extends AppCompatActivity implements TDLibMana
         setContentView(R.layout.chat_conversation);
 
         //Lấy data từ itent trước đó là (ListConversation)
-        long id = getIntent().getLongExtra("AppChatID", 192);
+        long id = layChatIdFromPreviousIntent();
         client = TDLibManager.getClient(this);
-      /*
-//        getTitle(chatId);
-        long lastMessageId = getLastMessage(chatId);*/
+
 //        Log.d("getChatLichSu", "ID lastmessage: " + lastMessageId);
-        getLichSuChat(chatId, 46137344);
+        getLichSuChat(id, 0);
         //GetLastMessage from_id= 0
-        /*long lastMessageId = getLastMessage(chatId); // trả về lastmessage ID
-//        if (lastMessageId != -1) {
+        /*
+        long lastMessageId = getLastMessage(chatId); // trả về lastmessage ID
+           if (lastMessageId != -1) {
             getLichSuChat(chatId, lastMessageId);
         } else {
             Toast.makeText(this, "Ngược lại", Toast.LENGTH_SHORT).show();
@@ -95,13 +100,9 @@ public class ConversationActivity extends AppCompatActivity implements TDLibMana
                 null);
 */
         Log.d("Client:", "Client khởi tạo:" + client.toString());
-        Log.d("Nhận:", "Client nhận tin nhắn của chatID:" + chatId);
-        // getChatHistoryBindingToListView(chatId, 0);
+        Log.d("Nhận:", "Client nhận tin nhắn của chatID:" + id);
 
-        //Phương thức
-//        getChatLichSu(chatId, 0);
-
-       /* img_send.setOnClickListener(new View.OnClickListener() {
+        img_send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 //                SearchPublicChat();
@@ -109,10 +110,14 @@ public class ConversationActivity extends AppCompatActivity implements TDLibMana
                 sendMessage();
 //                findSDT();
             }
-        });*/
+        });
     }
 
-    private long getLastMessage(String chatId) {
+    public long layChatIdFromPreviousIntent() {
+        return getIntent().getLongExtra("AppChatID", 192);
+    }
+
+    private long getLastMessage(long chatId) {
         getLichSuChat(chatId, 0);
 //        if (!historyMessages.isEmpty()) {
         TdApi.Message lastMessage = historyMessages.get(0);
@@ -141,11 +146,6 @@ public class ConversationActivity extends AppCompatActivity implements TDLibMana
         img_send = findViewById(R.id.img_send_message);
         img_send.setClickable(true);
 
-        /*LinearLayout.LayoutParams params = new
-                LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        params.gravity = Gravity.END;
-        layout_inputMess.setLayoutParams(params);*/
 
     }
 
@@ -159,20 +159,14 @@ public class ConversationActivity extends AppCompatActivity implements TDLibMana
                 TdApi.Chat chat1 = (TdApi.Chat) object;
                 tv_chat_title.setText(chat1.title);
                 Log.d(TAG, "Chat tile: " + chat1.title);
-                return;
             }
         });
     }
 
-    public void getLichSuChat(String chatId, long fromMessageId) {
+    public void getLichSuChat(long chatId, long fromMessageId) {
         Log.d("getChatLichSu", "Gọi hàm --> size: " + historyMessages.size());
-        // ...
-        //khởi tạo các biến cho phương thức getChatHistory()
-        int limit = 100; // Maximum number of messages to be returned
-        long chatIdd = Long.parseLong(chatId);
 //        Log.d("getChatLichSu", "Get lịch sử tin nhắn chatId: " + chatId);
-        TdApi.GetChatHistory getChatHistory = new TdApi.GetChatHistory(chatIdd, fromMessageId, 0, limit, false);
-
+        TdApi.GetChatHistory getChatHistory = new TdApi.GetChatHistory(chatId, fromMessageId, -1, 100, false);
         client.send(getChatHistory, this, null);
 
     }
@@ -216,26 +210,27 @@ public class ConversationActivity extends AppCompatActivity implements TDLibMana
                 TdApi.UpdateNewMessage updateNewMessage = (TdApi.UpdateNewMessage) object;
                 TdApi.Message message = updateNewMessage.message;
                 Log.d("getChatLichSu", "Size after update Chat message: " + historyMessages.size());
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        historyMessages.add(0, message);
-                        conversationChatAdapter.notifyItemInserted(0);
-                        // Scroll RecyclerView to the top to display the new message
-                        recyclerViewConversation.scrollToPosition(0);
-                    }
+                runOnUiThread(() -> {
+                    historyMessages.add(0, message);
+                    conversationChatAdapter.notifyItemInserted(0);
+                    // Scroll RecyclerView to the top to display the new message
+                    recyclerViewConversation.scrollToPosition(0);
                 });
-
-
         }
+    }
+
+    @Override
+    public void onUonUpdatesReceived(TdApi.Object update) {
+
     }
 
     public void sendMessage() {
         String message = edt_message.getText().toString();
+        long id = layChatIdFromPreviousIntent();
         if (!message.isEmpty()) {
             // Tạo đối tượng SendMessage
             TdApi.SendMessage sendMessage = new TdApi.SendMessage();
-            sendMessage.chatId = Long.parseLong(chatId);
+            sendMessage.chatId = id;
             sendMessage.inputMessageContent = new TdApi.InputMessageText();
             ((TdApi.InputMessageText) sendMessage.inputMessageContent).text = new TdApi.FormattedText();
             ((TdApi.InputMessageText) sendMessage.inputMessageContent).text.text = message;
@@ -252,6 +247,8 @@ public class ConversationActivity extends AppCompatActivity implements TDLibMana
                     // Hiển thị tin nhắn đã gửi trong TextView
                     String message1 = "Sent message: " + sentMessage.content.toString();
 //                    appendMessageToTextView(message1);
+                    historyMessages.add(sentMessage);
+                    recyclerViewConversation.scrollToPosition(historyMessages.size() - 1);
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -263,8 +260,7 @@ public class ConversationActivity extends AppCompatActivity implements TDLibMana
                     Log.e(TAG, "Unexpected result: " + object);
                 }
             });
-        } else
-            Toast.makeText(this, "Nhập tin nhắn", Toast.LENGTH_SHORT).show();
+        } else Toast.makeText(this, "Nhập tin nhắn", Toast.LENGTH_SHORT).show();
         edt_message.setText(""); // Xóa nội dung văn bản đã nhập
     }
 
@@ -317,11 +313,6 @@ public class ConversationActivity extends AppCompatActivity implements TDLibMana
     protected void onStart() {
         super.onStart();
         Log.d("ConverstationActivity", "Converstation");
-    }
-
-    private void populateListView(List<TdApi.Chat> body) {
-        ConversationAdapter conversationAdapter = new ConversationAdapter((ArrayList<TdApi.Chat>) body);
-        recyclerViewConversation.setAdapter(conversationAdapter);
     }
 
 
@@ -384,59 +375,106 @@ public class ConversationActivity extends AppCompatActivity implements TDLibMana
     }
 }
 
-class ConversationChatAdapter extends RecyclerView.Adapter<ConversationChatAdapter.ConversationChatHolder> {
-    private List<TdApi.Message> messageList;
+class ConversationChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+    private final List<TdApi.Message> messageList;
+    public static final int VIEW_TYPE_ME = 1;
+    public static final int VIEW_TYPE_OTHER = 0;
 
-    ConversationChatAdapter(List<TdApi.Message> messageList) {
+    @Override
+    public int getItemViewType(int position) {
+        // Determine the view type based on position
+        boolean isGoing = messageList.get(position).isOutgoing;
+        if (isGoing) {
+            return VIEW_TYPE_ME;  // Even positions are right items
+        } else {
+            return VIEW_TYPE_OTHER; // Odd positions are left items
+        }
+    }
+
+    public ConversationChatAdapter(List<TdApi.Message> messageList) {
         this.messageList = messageList;
     }
 
 
-    @NonNull
     @Override
-    public ConversationChatHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        LinearLayout linearLayout = (LinearLayout) LayoutInflater.from(parent.getContext()).inflate(R.layout.itemview_chat, parent, false);
-        return new ConversationChatHolder(linearLayout);
+    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+//        LinearLayout linearLayout = (LinearLayout) LayoutInflater.from(parent.getContext()).inflate(R.layout.itemview_chat, parent, false);
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+
+        if (viewType == VIEW_TYPE_OTHER) {
+            View rightView = inflater.inflate(R.layout.frm_receive_item_chat, parent, false);
+            return new ImOtherViewHolder(rightView);
+        } else {
+            View leftView = inflater.inflate(R.layout.frm_send_item_chat, parent, false);
+            return new ImUserViewHolder(leftView);
+        }
     }
 
+    public static ZonedDateTime convertDateTimeToGMT7(long dateTime) {
+        Instant instant = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            instant = Instant.ofEpochMilli(dateTime);
+        }
+        ZoneId zoneId = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            zoneId = ZoneId.of("GMT+7");
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return ZonedDateTime.ofInstant(instant, zoneId);
+        }
+        return null;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
-    public void onBindViewHolder(@NonNull ConversationChatHolder holder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
 
-        // Get the message's date
-        long date = messageList.get(position).date;
+        long timestamp = messageList.get(position).date;
 
-// Format the date
-        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
-        String formattedDate = format.format(date);
-        Log.d("onBindViewHolder", "Content: " + messageList.get(position).content + " Time: " + formattedDate);
-// Set the text of the TextView
+// Convert the timestamp to an Instant
+        Instant instant = Instant.ofEpochSecond(timestamp);
 
-        // Set the text and layout for TextView
-        // Set the text and layout for TextView
+// Convert the Instant to a LocalDateTime in the Vietnam time zone
+        ZoneId vietnamTimeZone = ZoneId.of("Asia/Ho_Chi_Minh");
+        LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, vietnamTimeZone);
+
+// Format the LocalDateTime as a String
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+        String formattedDateTime = localDateTime.format(formatter);
+
         if (messageList.get(position).content instanceof TdApi.MessageText) {
-            try {
-                if (messageList.get(position).isOutgoing) { // Tin nhắn gửi đi
-                    holder.linearLayout.setBackgroundResource(R.drawable.sender_message_bg);
-                    RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
-                            RelativeLayout.LayoutParams.WRAP_CONTENT,
-                            RelativeLayout.LayoutParams.WRAP_CONTENT
-                    );
-                    params.addRule(RelativeLayout.ALIGN_PARENT_END); // Đặt lề phải
-                    holder.linearLayout.setLayoutParams(params);
-                } else { // Tin nhắn nhận được
-                    holder.linearLayout.setBackgroundResource(R.drawable.receiver_message_bg);
-                    RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
-                            RelativeLayout.LayoutParams.WRAP_CONTENT,
-                            RelativeLayout.LayoutParams.WRAP_CONTENT
-                    );
-                    params.addRule(RelativeLayout.ALIGN_PARENT_START); // Đặt lề trái
-                    holder.linearLayout.setLayoutParams(params);
-                }
-                holder.tvMessage.setText(((TdApi.MessageText) messageList.get(position).content).text.text);
-                holder.tvTime.setText(formattedDate);
-            } catch (NullPointerException e) {
-                e.printStackTrace();
+            int viewType = getItemViewType(position);
+            if (viewType == VIEW_TYPE_ME) {
+                ImUserViewHolder imUserViewHolder = (ImUserViewHolder) holder;
+                imUserViewHolder.msg.setText(((TdApi.MessageText) messageList.get(position).content).text.text);
+                imUserViewHolder.time.setText(formattedDateTime);
+            } else {
+                ImOtherViewHolder imOtherViewHolder = (ImOtherViewHolder) holder;
+                imOtherViewHolder.msg.setText(((TdApi.MessageText) messageList.get(position).content).text.text);
+                imOtherViewHolder.time.setText(formattedDateTime);
             }
+        }
+
+
+    }
+
+    public class ImOtherViewHolder extends RecyclerView.ViewHolder {
+        public TextView msg, time;
+
+        public ImOtherViewHolder(View itemView) {
+            super(itemView);
+            msg = (TextView) itemView.findViewById(R.id.txt_display_message_receive);
+            time = (TextView) itemView.findViewById(R.id.txt_display_time_message_receive);
+        }
+    }
+
+    public class ImUserViewHolder extends RecyclerView.ViewHolder {
+        public TextView msg, time;
+
+        public ImUserViewHolder(View itemView) {
+            super(itemView);
+            msg = (TextView) itemView.findViewById(R.id.txt_display_message_send);
+            time = (TextView) itemView.findViewById(R.id.txt_display_time_message_send);
         }
     }
 
@@ -449,8 +487,7 @@ class ConversationChatAdapter extends RecyclerView.Adapter<ConversationChatAdapt
         notifyDataSetChanged();
     }
 
-
-    static class ConversationChatHolder extends RecyclerView.ViewHolder {
+   /* static class ConversationChatHolder extends RecyclerView.ViewHolder {
         LinearLayout linearLayout;
         TextView tvMessage, tvTime;
 
@@ -458,10 +495,10 @@ class ConversationChatAdapter extends RecyclerView.Adapter<ConversationChatAdapt
         ConversationChatHolder(@NonNull LinearLayout itemView) {
             super(itemView);
             linearLayout = itemView;
-            tvMessage = linearLayout.findViewById(R.id.txt_message_item);
+            tvMessage = linearLayout.findViewById(R.id.txt);
             tvTime = linearLayout.findViewById(R.id.txt_time_message);
         }
-    }
+    }*/
 }
 
 /*

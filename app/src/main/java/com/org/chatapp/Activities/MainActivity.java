@@ -67,6 +67,11 @@ public class MainActivity extends AppCompatActivity implements TDLibManager.Call
         }
     }
 
+    @Override
+    public void onUonUpdatesReceived(TdApi.Object update) {
+
+    }
+
     private void onAuthStateUpdated(TdApi.AuthorizationState authorizationState) {
         switch (authorizationState.getConstructor()) {
             case TdApi.AuthorizationStateWaitTdlibParameters.CONSTRUCTOR:
@@ -97,7 +102,7 @@ public class MainActivity extends AppCompatActivity implements TDLibManager.Call
             case TdApi.AuthorizationStateReady.CONSTRUCTOR:
                 // Đã đăng nhập trước đó, chuyển hướng đến ConversationActivity
                 Log.d("Main", "Gọi ListConversationsActivity: ");
-                Intent conversationIntent = new Intent(MainActivity.this, ConversationActivity.class);
+                Intent conversationIntent = new Intent(MainActivity.this, ListConversationsActivity.class);
                 startActivity(conversationIntent);
                 finish();
                 break;

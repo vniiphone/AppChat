@@ -158,6 +158,11 @@ public class AuthActivity extends AppCompatActivity implements TDLibManager.Call
 
     }
 
+    @Override
+    public void onUonUpdatesReceived(TdApi.Object update) {
+
+    }
+
 
     @Override
     public void onSetTdlibParametersSuccess() {
