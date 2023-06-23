@@ -42,9 +42,7 @@ public class LoginActivity extends AppCompatActivity implements TDLibManager.Cal
         client = TDLibManager.getClient(this);
 
         // Khởi tạo TokenStorage và gán giá trị cho token và hasToken
-        tokenStorage = new TokenStorage(this);
-        token = tokenStorage.getAccessToken();
-        hasToken = tokenStorage.hasAccessToken();
+
         AnhXa();
 
         btn_login.setOnClickListener(v -> {
@@ -63,7 +61,7 @@ public class LoginActivity extends AppCompatActivity implements TDLibManager.Cal
         if (!strSDT.isEmpty()) {
             if (strSDT.startsWith("+84")) {
                 // Lấy token từ TokenStorage
-                String token = tokenStorage.getAccessToken();
+//                String token = tokenStorage.getAccessToken();
                 /*
                  * Gửi OTP cho TDLib để gửi cho máy chủ Telegram. Bạn có thể sử dụng phương thức
                  * client.send() để gửi yêu cầu xác thực sử dụng OTP đến máy chủ Telegram
@@ -73,7 +71,7 @@ public class LoginActivity extends AppCompatActivity implements TDLibManager.Cal
                 authenticationSettings.allowFlashCall = true;
                 authenticationSettings.isCurrentPhoneNumber = true;
                 TdApi.SetAuthenticationPhoneNumber setPhoneNumber = new TdApi.SetAuthenticationPhoneNumber(strSDT, authenticationSettings);
-                client.send(setPhoneNumber, this);
+                client.send(setPhoneNumber, this::onResult);
             } else {
                 edt_sdt.setError("Nhập đúng định dạng là +84 cho vùng Việt Nam");
             }
@@ -102,25 +100,20 @@ public class LoginActivity extends AppCompatActivity implements TDLibManager.Cal
 
     @Override
     public void onResult(TdApi.Object object) {
-        if (object instanceof TdApi.Ok) {
-            // Xác thực thành công
-            // Xử lý và chuyển hướng đến màn hình ConversationActivity
-            Log.d("LoginActivity", "onResult: Xác thực thành công -> GO TO TEST");
-            Intent intent = new Intent(LoginActivity.this, ListConversationsActivity.class);
-            startActivity(intent);
-            finish();
-            // Lấy Token từ kết quả xác thực
-            String token = tokenStorage.getAccessToken(); // Lấy Token từ kết quả xác thực
-            // Lưu trữ token
-            tokenStorage.saveAccessToken(token);
-        } else if (object instanceof TdApi.Error) {
-            // Xử lý lỗi xác thực
-            edt_sdt.setError("Lỗi Xác Thực, kiểm tra số điện thoại");
-            Toast.makeText(this, "Lỗi Xác Thực", Toast.LENGTH_SHORT).show();
-            Log.d("LoginActivity", "onResult: lỗi xác thực");
-        } else {
-            // Xử lý các kết quả khác từ TDLib
-            Log.d("LoginActivity", "onResult: xử lý kết quả từ TDLib");
+        switch (object.getConstructor()) {
+            case TdApi.Ok.CONSTRUCTOR:
+                Log.d("onResult-->", "Ok.Contructor + "+object);
+                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                startActivity(intent);
+                finish();
+                break;
+            case TdApi.Error.CONSTRUCTOR:
+                edt_sdt.setError("Lỗi Xác Thực, kiểm tra số điện thoại");
+                Toast.makeText(this, "Lỗi Xác Thực", Toast.LENGTH_SHORT).show();
+                Log.d("LoginActivity", "onResult: lỗi xác thực");
+                break;
+            default:
+                Log.d("onResult-->", "default");
         }
 
     }

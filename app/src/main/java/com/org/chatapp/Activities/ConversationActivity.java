@@ -52,6 +52,10 @@ public class ConversationActivity extends AppCompatActivity implements TDLibMana
     public ArrayList<TdApi.Chat> chatList = new ArrayList<>();
     private final static String TAG = "Converstation Activity";
 
+    private static TdApi.AuthorizationState authorizationState = null;
+    private static volatile boolean haveAuthorization = false;
+    private static volatile boolean needQuit = false;
+    private static volatile boolean canQuit = false;
     //Khai báo các thành phần trong UI
     //Top_bar
     private ConstraintLayout lout_bartop;
@@ -86,7 +90,7 @@ public class ConversationActivity extends AppCompatActivity implements TDLibMana
 
         AnhXaId();
 
-        img_send.setOnClickListener(v -> sendMessage());
+//        img_send.setOnClickListener(v -> sendMessage());
        /* client.send(new TdApi.GetChatHistory(
                         chatIddLong,
                         0,
@@ -170,13 +174,36 @@ public class ConversationActivity extends AppCompatActivity implements TDLibMana
     }
 
     public void returnBack(View view) {
-        Intent intent = new Intent(ConversationActivity.this, ListConversationsActivity.class);
-        startActivity(intent);
+        finish();
+//        Intent intent = new Intent(ConversationActivity.this, ListConversationsActivity.class);
+//        startActivity(intent);
     }
 
     @Override
     public void onResult(TdApi.Object object) {
         switch (object.getConstructor()) {
+            case TdApi.LogOut.CONSTRUCTOR:
+                haveAuthorization = false;
+                finish();
+                break;
+            case TdApi.AuthorizationStateLoggingOut.CONSTRUCTOR:
+                haveAuthorization = false;
+                Log.d("onResult-->", "Logging out");
+                finish();
+                break;
+            case TdApi.AuthorizationStateClosing.CONSTRUCTOR:
+                haveAuthorization = false;
+                Log.d("onResult-->", "Closing");
+                finish();
+                break;
+            case TdApi.AuthorizationStateClosed.CONSTRUCTOR:
+                Log.d("onResult-->", "Closed");
+                if (!needQuit) {
+                    client = Client.create(this, null, null); // recreate client after previous has closed
+                } else {
+                    canQuit = true;
+                }
+                break;
             case TdApi.Messages.CONSTRUCTOR:
                 TdApi.Messages m = (TdApi.Messages) object;
                 Collections.addAll(historyMessages, m.messages);
@@ -196,7 +223,6 @@ public class ConversationActivity extends AppCompatActivity implements TDLibMana
                 });
             case TdApi.Chat.CONSTRUCTOR: {
                 TdApi.Chat chat = (TdApi.Chat) object;
-
                 Log.d("onResult->", "Chat.Lastmessage " + chat.lastMessage);
                 getLichSuChat(chat.id, chat.lastMessage.id);
                 runOnUiThread(() -> {

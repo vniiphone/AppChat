@@ -6,24 +6,46 @@
     android:layout_height="match_parent"
     tools:context=".Activities.ListConversationsActivity">
 
-    <androidx.constraintlayout.utils.widget.MotionLabel
-        android:id="@+id/toolbar_Conversation"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_bar_top"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Trò chuyện"
-        android:layout_marginTop="10dp"
-        android:layout_marginLeft="10dp"
-        android:textColor="#0C0B0B"
-        android:textSize="25sp"
-        android:textStyle="bold" />
+        android:padding="1dp">
 
+        <androidx.constraintlayout.utils.widget.MotionLabel
+            android:id="@+id/toolbar_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_gravity="start"
+            android:layout_marginStart="25dp"
+            android:layout_marginTop="5dp"
+            android:text="Trò chuyện"
+            android:textColor="#0C0B0B"
+            android:textSize="25sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/img_new_group"
+            android:layout_width="110dp"
+            android:layout_height="50dp"
+            android:src="@drawable/newbutton"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerview_conversation"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/toolbar_Conversation"
+        android:layout_below="@id/layout_bar_top"
         android:layout_marginStart="10dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="5dp"
         android:layout_marginEnd="10dp"
         android:layout_marginBottom="10dp"
         tools:listitem="@layout/itemview_chats"></androidx.recyclerview.widget.RecyclerView>

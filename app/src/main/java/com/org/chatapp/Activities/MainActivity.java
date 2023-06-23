@@ -2,30 +2,18 @@ package com.org.chatapp.Activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.PopupWindow;
-import android.widget.Toast;
 
 import com.org.chatapp.R;
-import com.org.chatapp.Utils.ChatsManager;
 import com.org.chatapp.Utils.TDLibManager;
-import com.org.chatapp.Utils.Utils;
 
 import org.drinkless.td.libcore.telegram.Client;
 import org.drinkless.td.libcore.telegram.TdApi;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.NavigableSet;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -35,7 +23,9 @@ public class MainActivity extends AppCompatActivity implements TDLibManager.Call
     //    private static final NavigableSet<OrderedChat> mainChatList = new TreeSet<OrderedChat>();
     private static final String newLine = System.getProperty("line.separator");
     private static final ConcurrentMap<Long, TdApi.Chat> chats = new ConcurrentHashMap<Long, TdApi.Chat>();
-
+    private static TdApi.AuthorizationState authorizationState = null;
+    private static volatile boolean needQuit = false;
+    private static volatile boolean canQuit = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +64,14 @@ public class MainActivity extends AppCompatActivity implements TDLibManager.Call
 
     private void onAuthStateUpdated(TdApi.AuthorizationState authorizationState) {
         switch (authorizationState.getConstructor()) {
+            case TdApi.AuthorizationStateClosed.CONSTRUCTOR:
+                Log.d("onResult-->", "Closed");
+                if (!needQuit) {
+                    client = Client.create(this, null, null); // recreate client after previous has closed
+                } else {
+                    canQuit = true;
+                }
+                break;
             case TdApi.AuthorizationStateWaitTdlibParameters.CONSTRUCTOR:
                 // Xử lý trạng thái chờ thông số TDLib
                 Log.d("Main", "AuthorizationStateWaitTdlibParameters");
@@ -106,22 +104,6 @@ public class MainActivity extends AppCompatActivity implements TDLibManager.Call
                 startActivity(conversationIntent);
                 finish();
                 break;
-                /*
-//                getMainChatList(1);
-//                ListChatsActivity.getMainChatList(100);
-//                GetMainListChatUtil.getMainChatList(20, client);
-//                ChatsManager.getInstance().getChats();
-
-
-             getChats();
-                synchronized (chatList) {
-                    Log.d("lol", "AuthorizationStateReady.CONSTRUCTOR:: " + chatList.size());
-                    for (TdApi.Chat chat : chatList) {
-                        Log.d("lol2", "Chat: " + chat.title + " lastMessage: " + chat.lastMessage);
-                    }
-                }
-//                Utils.getMainChatList(20);*/
-
             case TdApi.AuthorizationStateWaitRegistration.CONSTRUCTOR: {
                 Intent RegistrationIntent = new Intent(MainActivity.this, RegistrationActivity.class);
                 startActivity(RegistrationIntent);
@@ -141,123 +123,4 @@ public class MainActivity extends AppCompatActivity implements TDLibManager.Call
         }
 
     }
-
-    private ArrayList<TdApi.Chat> chatList = new ArrayList<>();
-
-    public ArrayList<TdApi.Chat> getChats() {
-        Log.d("lol", "getChats: " + chatList.size());
-//        TdApi.ChatList chatList1 = new TdApi.ChatList()
-        client.send(new TdApi.GetChats(new TdApi.ChatList() {
-            @Override
-            public int getConstructor() {
-                return TdApi.ChatListMain.CONSTRUCTOR;
-            }
-        }, 20), new Client.ResultHandler() {
-            @Override
-            public void onResult(TdApi.Object object) {
-                switch (object.getConstructor()) {
-                    case TdApi.Error.CONSTRUCTOR:
-                        Log.d("lol", "object: " + object);
-                        break;
-                    case TdApi.Chats.CONSTRUCTOR:
-                        long chatIDs[] = ((TdApi.Chats) object).chatIds;
-
-                        for (long chatID : chatIDs) {
-                            Log.d("lol", "onResult: " + chatID);
-                            client.send(new TdApi.GetChat(chatID), this, null);
-                        }
-                        Log.d("lol", "onResult: " + chatIDs.toString());
-                        break;
-                    case TdApi.Chat.CONSTRUCTOR:
-                        Log.d("lol", "Chat.CONSTRUCTOR: " + object);
-                        TdApi.Chat myChat = ((TdApi.Chat) object);
-
-                        chatList.add(myChat);
-                        Log.d("lol", "Chat.CONSTRUCTOR: " + chatList.size());
-                        break;
-                }
-            }
-        });
-        Log.d("lol", "getChatsList: " + chatList.size());
-        return chatList;
-    }
-
-    /*private static void getMainChatList(final int limit) {
-        synchronized (mainChatList) {
-            Log.d("onResult", String.valueOf(mainChatList.size()));
-            if ( limit > mainChatList.size()) {
-                // send LoadChats request if there are some unknown chats and have not enough known chats
-                client.send(new TdApi.LoadChats(new TdApi.ChatListMain(), limit - mainChatList.size()), new Client.ResultHandler() {
-                    @Override
-                    public void onResult(TdApi.Object object) {
-                        Log.d("onResult","getMainChatList");
-                        switch (object.getConstructor()) {
-                            case TdApi.Error.CONSTRUCTOR:
-                                if (((TdApi.Error) object).code == 404) {
-                                    synchronized (mainChatList) {
-                                        Log.d("Xác thực","TdApi.ConnectionStateReady.CONSTRUCTOR:"+ TdApi.ConnectionStateReady.CONSTRUCTOR);
-                                        Log.d("onResult","1 .mainChatList");
-                                    }
-                                } else {
-                                    Log.d("onResult","2 .mainChatList");
-                                    System.err.println("Receive an error for LoadChats:" + newLine + object);
-                                }
-                                break;
-                            case TdApi.Ok.CONSTRUCTOR:
-                                Log.d("onResult","3 .TdApi.Ok.CONSTRUCTOR");
-                                // chats had already been received through updates, let's retry request
-                                getMainChatList(limit);
-                                break;
-                            default:
-                                Log.d("onResult","4 .default");
-                                System.err.println("Receive wrong response from TDLib:" + newLine + object);
-                        }
-                    }
-                });
-                return;
-            }
-
-            java.util.Iterator<OrderedChat> iter = mainChatList.iterator();
-            System.out.println();
-            System.out.println("First " + limit + " chat(s) out of " + mainChatList.size() + " known chat(s):");
-            Log.d("MainListChat","Size: "+mainChatList.size());
-            for (int i = 0; i < limit && i < mainChatList.size(); i++) {
-                long chatId = iter.next().chatId;
-                TdApi.Chat chat = chats.get(chatId);
-                synchronized (chat) {
-                    System.out.println(chatId + ": " + chat.title);
-                    Log.d("MainListChat",chatId + ": " + chat.title);
-                }
-            }
-
-        }
-    }
-
-    private static class OrderedChat implements Comparable<OrderedChat> {
-        final long chatId;
-        final TdApi.ChatPosition position;
-
-        OrderedChat(long chatId, TdApi.ChatPosition position) {
-            this.chatId = chatId;
-            this.position = position;
-        }
-
-        @Override
-        public int compareTo(OrderedChat o) {
-            if (this.position.order != o.position.order) {
-                return o.position.order < this.position.order ? -1 : 1;
-            }
-            if (this.chatId != o.chatId) {
-                return o.chatId < this.chatId ? -1 : 1;
-            }
-            return 0;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            OrderedChat o = (OrderedChat) obj;
-            return this.chatId == o.chatId && this.position.order == o.position.order;
-        }
-    }*/
 }
-

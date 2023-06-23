@@ -22,7 +22,7 @@
             android:layout_marginStart="5dp"
             android:gravity="end"
             android:paddingLeft="10dp"
-            android:text="hj"
+            android:text="Message"
             android:minWidth="35dp"
             android:textColor="@color/black"
             android:textSize="18sp" />

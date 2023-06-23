@@ -10,6 +10,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.org.chatapp.Local.TokenStorage;
 import com.org.chatapp.R;
 import com.org.chatapp.Utils.TDLibManager;
 
@@ -28,12 +29,19 @@ public class AuthActivity extends AppCompatActivity implements TDLibManager.Call
     private static Client client = null;
     private Button btn_checkauth;
     private EditText edt_code;
+    TokenStorage tokenStorage;
+
+    String token;
+    boolean hasToken;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_auth);
 
+        tokenStorage = new TokenStorage(this);
+        token = tokenStorage.getAccessToken();
+        hasToken = tokenStorage.hasAccessToken();
         AnhXa();
 // Khởi tạo TDLib client
         // client = Client.create(this, this, this);
@@ -50,25 +58,10 @@ public class AuthActivity extends AppCompatActivity implements TDLibManager.Call
             }
         });
 
-        Client.ResultHandler updateHandler = new Client.ResultHandler() {
-            @Override
-            public void onResult(TdApi.Object object) {
-                System.out.println("Receive Update: " + object.toString());
-            }
-        };
-        Client.ExceptionHandler updateExceptionHandler = new Client.ExceptionHandler() {
-            @Override
-            public void onException(Throwable e) {
-                System.out.println("Receive ExceptionHandler: " + e.getMessage());
-            }
-        };
+        Client.ResultHandler updateHandler = object -> System.out.println("Receive Update: " + object.toString());
+        Client.ExceptionHandler updateExceptionHandler = e -> System.out.println("Receive ExceptionHandler: " + e.getMessage());
 
-        Client.ExceptionHandler defaultExceptionHandler = new Client.ExceptionHandler() {
-            @Override
-            public void onException(Throwable e) {
-                System.out.println("Receive defaultExceptionHandler: " + e.getMessage());
-            }
-        };
+        Client.ExceptionHandler defaultExceptionHandler = e -> System.out.println("Receive defaultExceptionHandler: " + e.getMessage());
 
         Client client = Client.create(updateHandler, updateExceptionHandler, defaultExceptionHandler);
         // Kiểm tra xem đối tượng Client đã được tạo thành công hay không
@@ -109,7 +102,7 @@ public class AuthActivity extends AppCompatActivity implements TDLibManager.Call
                         parameters.useMessageDatabase = true;
                         parameters.useSecretChats = true;
                         parameters.systemLanguageCode = "en";
-                        parameters.deviceModel = "Pixel";
+                        parameters.deviceModel = "Pixel 6";
                         authStateRequest.systemVersion = "12.0";
                         parameters.applicationVersion = "0.0.1";
                         authStateRequest.enableStorageOptimizer = true;
@@ -119,11 +112,19 @@ public class AuthActivity extends AppCompatActivity implements TDLibManager.Call
                         client.send(new TdApi.CheckDatabaseEncryptionKey(), this);
                         break;
                     case TdApi.AuthorizationStateReady.CONSTRUCTOR:
+                        // Lấy Token từ kết quả xác thực
+                        String token = tokenStorage.getAccessToken(); // Lấy Token từ kết quả xác thực
+                        // Lưu trữ token
+                        tokenStorage.saveAccessToken(token);
                         Intent conversationIntent = new Intent(AuthActivity.this, MainActivity.class);
                         conversationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(conversationIntent);
-                        //client.send(new TdApi.UpdateAuthorizationState(new TdApi.AuthorizationStateReady()),null,null);
-                        //finish();
+                        break;
+                    //client.send(new TdApi.UpdateAuthorizationState(new TdApi.AuthorizationStateReady()),null,null);
+                    //finish();
+                    default:
+                        Log.d("AuthActivity", "onResult: Defalt " + object);
+
                 }
             case TdApi.UpdateConnectionState.CONSTRUCTOR:
                 switch (((TdApi.UpdateConnectionState) object).state.getConstructor()) {
