@@ -87,10 +87,10 @@ public class ListConversationsActivity extends AppCompatActivity implements TDLi
         AnhXa();
         imgNewGroup.setOnClickListener(v -> {
 
-//            client.send(new TdApi.LogOut(), this::onResult);
+            client.send(new TdApi.LogOut(), this::onResult);
 
-            Intent intent = new Intent(ListConversationsActivity.this, NewGroupActivity.class);
-            startActivity(intent);
+           /* Intent intent = new Intent(ListConversationsActivity.this, NewGroupActivity.class);
+            startActivity(intent);*/
         });
         recyclerView_conversation_listChat.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
             @Override
@@ -252,6 +252,7 @@ public class ListConversationsActivity extends AppCompatActivity implements TDLi
 
     @Override
     public void onResult(TdApi.Object object) {
+        Log.d("debugPhoto", "Object nhận được: " + object);
         switch (object.getConstructor()) {
             case TdApi.Error.CONSTRUCTOR:
                 Log.d("getChatDebug", "Error.CONSTRUCTOR: " + object);
