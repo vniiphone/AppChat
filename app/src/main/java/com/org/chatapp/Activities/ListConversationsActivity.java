@@ -84,21 +84,13 @@ public class ListConversationsActivity extends AppCompatActivity implements TDLi
         chatListArray = new ArrayList<>();
 //      getChats();
         getChatDebug();
-
-      /*  Log.d("onCreate", "Szioe Chat arrray" + chatListArray.size());
-        Intent intent = new Intent(ListConversationsActivity.this, ConversationActivity.class);
-        Bundle bundle = new Bundle();
-        bundle.putString("chatIdFromPrevious", "5547360308");
-        intent.putExtras(bundle);
-        startActivity(intent);*/
-
         AnhXa();
         imgNewGroup.setOnClickListener(v -> {
 
-            client.send(new TdApi.LogOut(), this::onResult);
+//            client.send(new TdApi.LogOut(), this::onResult);
 
-           /* Intent intent = new Intent(ListConversationsActivity.this, NewGroupActivity.class);
-            startActivity(intent);*/
+            Intent intent = new Intent(ListConversationsActivity.this, NewGroupActivity.class);
+            startActivity(intent);
         });
         recyclerView_conversation_listChat.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
             @Override
@@ -202,8 +194,8 @@ public class ListConversationsActivity extends AppCompatActivity implements TDLi
                             });
                             break;
                         case TdApi.Ok.CONSTRUCTOR:
-                            Log.d("getChats()", "Received OK: sysout Object " + object);
-                            getChats();
+                            Log.d("getChatDebug()", "Received OK: sysout Object " + object);
+                            getChatDebug();
                             break;
                         default:
                             System.err.println("Receive wrong response from TDLib:" + newLine + object);
@@ -221,7 +213,7 @@ public class ListConversationsActivity extends AppCompatActivity implements TDLi
             public int getConstructor() {
                 return TdApi.ChatListMain.CONSTRUCTOR;
             }
-        }, 20), this::onResult); /*{
+        }, 30), this::onResult); /*{
             @Override
             public void onResult(TdApi.Object object) {
                 switch (object.getConstructor()) {
