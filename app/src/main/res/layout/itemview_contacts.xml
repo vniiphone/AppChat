@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout_contacts_newgroup_item"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="5dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginEnd="5dp"
+    android:background="@drawable/bg_item_contact"
+    android:padding="5dp">
+
+    <ImageView
+        android:id="@+id/img_contacts"
+        android:layout_width="55dp"
+        android:layout_height="55dp"
+        android:layout_centerVertical="true"
+        android:layout_marginStart="3dp"
+        android:src="@drawable/unknowavt" />
+    <TextView
+        android:id="@+id/txt_name_contact_item"
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="15dp"
+        android:layout_toRightOf="@id/img_contacts"
+        android:text="Name Contact"
+        android:textColor="@color/cardview_dark_background"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/txt_sdt_contact_item"
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/txt_name_contact_item"
+        android:layout_marginStart="15dp"
+        android:layout_marginTop="5dp"
+        android:layout_toEndOf="@+id/img_contacts"
+        android:layout_toRightOf="@id/img_contacts"
+        android:text="Phone Number"
+        android:textColor="@color/cardview_dark_background"
+        android:textSize="17sp" />
+</RelativeLayout>

@@ -3,6 +3,7 @@ package com.org.chatapp.Activities;
 
 import static com.org.chatapp.Utils.Utils.print;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -38,6 +39,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -46,12 +48,21 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
 
 public class ListConversationsActivity extends AppCompatActivity implements TDLibManager.Callback {
+    private static final int REQUEST_CODE_CONVERSATION = 1;
     public static Client client;
     public final String TAG = "ListConversationsActivity";
     RecyclerView recyclerView_conversation_listChat;
+<<<<<<< Updated upstream
+=======
+    ImageView imgNewGroup, imgLogout;
+>>>>>>> Stashed changes
     public static ArrayList<TdApi.Chat> chatListArray;
+    public static ArrayList<TdApi.File> fileArray;
+
 //    public static ArrayList<TdApi.Chat> chatListArrayDummy = new ArrayList<>();
 
     private static TdApi.AuthorizationState authorizationState = null;
@@ -70,6 +81,7 @@ public class ListConversationsActivity extends AppCompatActivity implements TDLi
     private static final String newLine = System.getProperty("line.separator");
     ListChatsAdapter listChatsAdapter;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,6 +92,7 @@ public class ListConversationsActivity extends AppCompatActivity implements TDLi
 
         chatListArray = new ArrayList<>();
 //      getChats();
+<<<<<<< Updated upstream
         getChatDebug();
 
       /*  Log.d("onCreate", "Szioe Chat arrray" + chatListArray.size());
@@ -95,6 +108,17 @@ public class ListConversationsActivity extends AppCompatActivity implements TDLi
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }*/
+=======
+//        getChatDebug();
+        AnhXa();
+        imgNewGroup.setOnClickListener(v -> {
+
+//            client.send(new TdApi.LogOut(), this::onResult);
+            Intent intent = new Intent(ListConversationsActivity.this, NewGroupActivity.class);
+            startActivityForResult(intent, REQUEST_CODE_CONVERSATION);
+        });
+
+>>>>>>> Stashed changes
         recyclerView_conversation_listChat.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
             @Override
             public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
@@ -102,11 +126,23 @@ public class ListConversationsActivity extends AppCompatActivity implements TDLi
                 int position = rv.getChildAdapterPosition(childView);
                 if (childView != null && e.getAction() == MotionEvent.ACTION_UP) {
                     long putId = chatListArray.get(position).id;
+                    String strPath;
+                    String strTitle = chatListArray.get(position).title;
+                    long longIDLastMsg = chatListArray.get(position).lastMessage.id;
+
                     String strID = String.valueOf(putId);
-                    Log.d("onCreate", "Szioe Chat arrray" + chatListArray.size());
+//                    String strTitle = chatListArray.get(position).title;
+                    Log.d("onCreate", "Sizee Chat arrray" + strTitle);
                     Intent intent = new Intent(ListConversationsActivity.this, ConversationActivity.class);
                     Bundle bundle = new Bundle();
+<<<<<<< Updated upstream
                     bundle.putString("chatIdFromPrevious",strID);
+=======
+                    bundle.putString("chatIdFromPrevious", strID);
+                    bundle.putString("chatTittle", strTitle);
+                    bundle.putLong("lasgMsgId", longIDLastMsg);
+//                    bundle.putString("pathChatPhoto",strPath);
+>>>>>>> Stashed changes
                     intent.putExtras(bundle);
                     startActivity(intent);
                     Log.d("getLichSuChatDebug", "LastMessage of List: " + chatListArray.get(position).lastMessage.id);
@@ -128,13 +164,42 @@ public class ListConversationsActivity extends AppCompatActivity implements TDLi
         });
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.d("DebugActitivty", "onStart");
+        chatListArray.clear();
+        getChatDebug();
+
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        Log.d("DebugActitivty", "onRestart");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d("DebugActitivty", "onResume");
+
+
+    }
+
     private void AnhXa() {
+<<<<<<< Updated upstream
+=======
+        imgNewGroup = findViewById(R.id.img_new_group);
+//        imgLogout = findViewById(R.id.img_logout);
+>>>>>>> Stashed changes
         recyclerView_conversation_listChat = findViewById(R.id.recyclerview_conversation);
         recyclerView_conversation_listChat.setLayoutManager(new LinearLayoutManager(this));
         listChatsAdapter = new ListChatsAdapter(chatListArray);
         recyclerView_conversation_listChat.setAdapter(listChatsAdapter);
     }
 
+<<<<<<< Updated upstream
     public void getChats() {
 /*
         - Tạo một danh sách mới updatedChatList để chứa các cuộc trò chuyện được cập nhật.
@@ -208,6 +273,8 @@ public class ListConversationsActivity extends AppCompatActivity implements TDLi
         }
 
     }
+=======
+>>>>>>> Stashed changes
 
     public ArrayList<TdApi.Chat> getChatDebug() {
         Log.d(TAG, "getChats: " + this.chatListArray.size());
@@ -216,6 +283,7 @@ public class ListConversationsActivity extends AppCompatActivity implements TDLi
             public int getConstructor() {
                 return TdApi.ChatListMain.CONSTRUCTOR;
             }
+<<<<<<< Updated upstream
         }, 20), new Client.ResultHandler() {
             @Override
             public void onResult(TdApi.Object object) {
@@ -250,17 +318,123 @@ public class ListConversationsActivity extends AppCompatActivity implements TDLi
                 }
             }
         });
+=======
+        }, 30), this::onResult);
+>>>>>>> Stashed changes
         return chatListArray;
     }
 
     @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_CODE_CONVERSATION) {
+            if (resultCode == Activity.RESULT_OK) {
+                // Tải lại danh sách trò chuyện
+                chatListArray.clear();
+                getChatDebug();
+
+            }
+        }
+    }
+
+
+    @Override
     public void onResult(TdApi.Object object) {
+<<<<<<< Updated upstream
         Log.d("onResult->", "OnResult: " + object.toString());
+=======
+        Log.d("debugPhoto", "Object nhận được: " + object);
+        switch (object.getConstructor()) {
+            case TdApi.Error.CONSTRUCTOR:
+                Log.d("getChatDebug", "Error.CONSTRUCTOR: " + object);
+                break;
+            case TdApi.Chats.CONSTRUCTOR:
+                long chatIDs[] = ((TdApi.Chats) object).chatIds;
+                Log.d("getChatDebug", "Chats.CONSTRUCTOR: " + object + " Chat size: " + Arrays.stream(chatIDs).count());
+                for (long chatID : chatIDs) {
+                    Log.d("getChatDebug", "onResult: " + chatID);
+                    client.send(new TdApi.GetChat(chatID), this::onResult);
+                }
+                Log.d("getChatDebug", "onResult: " + chatIDs.toString());
+                break;
+            case TdApi.Chat.CONSTRUCTOR:
+                Log.d("getChatDebug", "Chat.CONSTRUCTOR: " + object);
+                TdApi.Chat myChat = ((TdApi.Chat) object);
+                chatListArray.add(myChat);
+                client.send(new TdApi.DownloadFile(myChat.photo.small.id, 1, 0, 0, false), this::onResult);
+                runOnUiThread(() -> listChatsAdapter.refresh());
+                Log.d("getChatDebug", "Chat.CONSTRUCTOR: " + chatListArray.size());
+                break;
+       /*     case TdApi.File.CONSTRUCTOR:
+                TdApi.File file = (TdApi.File) object;
+                fileArray.add(file);
+                Log.d("onResult-->", "File: " + file.local);
+                break;*/
+            case TdApi.UpdateUser.CONSTRUCTOR:
+                TdApi.UpdateUser updateUser = (TdApi.UpdateUser) object;
+                TdApi.User user = updateUser.user;
+            case TdApi.Ok.CONSTRUCTOR:
+                Log.d("getChatDebug", "Ok.CONSTRUCTOR:: " + object);
+                break;
+            case TdApi.LogOut.CONSTRUCTOR:
+                Log.d("getChatDebug", "LogOut.CONSTRUCTOR " + object);
+                haveAuthorization = false;
+                client.close();
+                finish();
+                Intent intent = new Intent(ListConversationsActivity.this, LoginActivity.class);
+                startActivity(intent);
+                break;
+            case TdApi.AuthorizationStateLoggingOut.CONSTRUCTOR:
+                haveAuthorization = false;
+                Log.d("getChatDebug", "Logging out");
+                finish();
+                break;
+            case TdApi.AuthorizationStateClosing.CONSTRUCTOR:
+                haveAuthorization = false;
+                Log.d("getChatDebug", "Closing");
+                finish();
+                break;
+            case TdApi.AuthorizationStateClosed.CONSTRUCTOR:
+                Log.d("getChatDebug", "Closed");
+                if (!needQuit) {
+                    client = Client.create(this, null, null); // recreate client after previous has closed
+                } else {
+                    canQuit = true;
+                }
+                break;
+            default:
+                Log.d("DeBugNull", "Object Default: " + object);
+        }
+>>>>>>> Stashed changes
     }
 
     @Override
     public void onUonUpdatesReceived(TdApi.Object update) {
-
+        switch (update.getConstructor()) {
+            case TdApi.UpdateNewMessage.CONSTRUCTOR:
+                // Xử lý cập nhật tin nhắn mới
+                TdApi.UpdateNewMessage updateNewMessage = (TdApi.UpdateNewMessage) update;
+                TdApi.Message message = updateNewMessage.message;
+                Log.d("NhanTinUpdate", message.content.toString());
+                runOnUiThread(() -> listChatsAdapter.refresh());
+                Toast.makeText(this, "Tin nhắn: " + message.content, Toast.LENGTH_SHORT).show();
+                // ...
+                break;
+            case TdApi.UpdateChatLastMessage.CONSTRUCTOR:
+                // Xử lý cập nhật tin nhắn cuối cùng trong cuộc trò chuyện
+                runOnUiThread(() -> listChatsAdapter.refresh());
+                TdApi.UpdateChatLastMessage updateChatLastMessage = (TdApi.UpdateChatLastMessage) update;
+                // ...
+                break;
+            case TdApi.UpdateChatReadInbox.CONSTRUCTOR:
+                // Xử lý cập nhật trạng thái tin nhắn đã đọc trong cuộc trò chuyện
+                TdApi.UpdateChatReadInbox updateChatReadInbox = (TdApi.UpdateChatReadInbox) update;
+                // ...
+                break;
+            default:
+                Log.d("TDLibManager", "Default " + update);
+        }
     }
 
 
@@ -271,11 +445,6 @@ public class ListConversationsActivity extends AppCompatActivity implements TDLi
         }
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        client.close();
-    }
 
     private static class OrderedChat implements Comparable<OrderedChat> {
         final long chatId;

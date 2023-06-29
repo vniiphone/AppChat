@@ -307,7 +307,7 @@
                                 <PersistentState>
                                   <option name="values">
                                     <map>
-                                      <entry key="url" value="file:/C:/Android/sdk/icons/material/materialiconsoutlined/arrow_back_ios/outline_arrow_back_ios_24.xml" />
+                                      <entry key="url" value="file:/C:/Android/sdk/icons/material/materialicons/power_settings_new/baseline_power_settings_new_24.xml" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -317,7 +317,7 @@
                         </option>
                         <option name="values">
                           <map>
-                            <entry key="outputName" value="outline_arrow_back" />
+                            <entry key="outputName" value="baseline_power" />
                             <entry key="sourceFile" value="F:\2022_2023\TTTT_HK3\code\AppChat" />
                           </map>
                         </option>

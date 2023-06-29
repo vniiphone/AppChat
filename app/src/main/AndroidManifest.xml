@@ -15,12 +15,23 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ChatApp"
         tools:targetApi="31">
+<<<<<<< Updated upstream
        <!-- <activity
+=======
+
+        <activity
+            android:name=".Activities.NewGroupActivity"
+            android:exported="false"
+            android:parentActivityName=".Activities.ListConversationsActivity" />
+        <!--
+         <activity
+>>>>>>> Stashed changes
             android:name=".Activities.ListChatsActivity"
             android:exported="false" />-->
       <activity
             android:name=".Activities.ListConversationsActivity"
             android:exported="false" />
+<<<<<<< Updated upstream
        <!-- <activity
             android:name=".Activities.SearchableActivity"
             android:exported="true">
@@ -31,25 +42,35 @@
                 android:name="android.app.searchable"
                 android:resource="@xml/searchable" />
         </activity>-->
+=======
+>>>>>>> Stashed changes
         <activity
-            android:name=".Activities.RegistrationActivity"
+            android:name=".Activities.ContactsActivity"
             android:exported="false" />
+<<<<<<< Updated upstream
        <!-- <activity
             android:name=".Activities.LoadActivity"
             android:exported="false" />-->
+=======
+>>>>>>> Stashed changes
         <activity
             android:name=".Activities.LoginActivity"
             android:exported="false" />
         <activity
             android:name=".Activities.ConversationActivity"
+<<<<<<< Updated upstream
             android:parentActivityName=".Activities.ListConversationsActivity"
             android:exported="false" />
         <activity
             android:name=".Activities.SendActivity"
             android:exported="false" />
+=======
+            android:exported="true"
+            android:parentActivityName=".Activities.ListConversationsActivity" />
+>>>>>>> Stashed changes
         <activity
             android:name=".Activities.AuthActivity"
-            android:exported="true" />
+            android:exported="false" />
         <activity
             android:name=".Activities.MainActivity"
             android:exported="true">

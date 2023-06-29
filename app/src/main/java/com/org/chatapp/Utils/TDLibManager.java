@@ -32,24 +32,31 @@ public class TDLibManager {
         void onResult(TdApi.Object object);
 
         void onUonUpdatesReceived(TdApi.Object update);
-    }
-    public void onUpdatesReceived(TdApi.Object update) {
-        // Xử lý cập nhật
-        if (update instanceof TdApi.UpdateNewMessage) {
-            // Xử lý cập nhật tin nhắn mới
-            TdApi.UpdateNewMessage updateNewMessage = (TdApi.UpdateNewMessage) update;
-            TdApi.Message message = updateNewMessage.message;
-            // ...
-        } else if (update instanceof TdApi.UpdateChatLastMessage) {
-            // Xử lý cập nhật tin nhắn cuối cùng trong cuộc trò chuyện
-            TdApi.UpdateChatLastMessage updateChatLastMessage = (TdApi.UpdateChatLastMessage) update;
-            // ...
-        } else if (update instanceof TdApi.UpdateChatReadInbox) {
-            // Xử lý cập nhật trạng thái tin nhắn đã đọc trong cuộc trò chuyện
-            TdApi.UpdateChatReadInbox updateChatReadInbox = (TdApi.UpdateChatReadInbox) update;
-            // ...
-        }
 
+    }
+
+    public void onUonUpdatesReceived(TdApi.Object update) {
+        // Xử lý cập nhật
+        switch (update.getConstructor()) {
+            case TdApi.UpdateNewMessage.CONSTRUCTOR:
+                // Xử lý cập nhật tin nhắn mới
+                TdApi.UpdateNewMessage updateNewMessage = (TdApi.UpdateNewMessage) update;
+                TdApi.Message message = updateNewMessage.message;
+                // ...
+                break;
+            case TdApi.UpdateChatLastMessage.CONSTRUCTOR:
+                // Xử lý cập nhật tin nhắn cuối cùng trong cuộc trò chuyện
+                TdApi.UpdateChatLastMessage updateChatLastMessage = (TdApi.UpdateChatLastMessage) update;
+                // ...
+                break;
+            case TdApi.UpdateChatReadInbox.CONSTRUCTOR:
+                // Xử lý cập nhật trạng thái tin nhắn đã đọc trong cuộc trò chuyện
+                TdApi.UpdateChatReadInbox updateChatReadInbox = (TdApi.UpdateChatReadInbox) update;
+                // ...
+                break;
+            default:
+                Log.d("TDLibManager", "Default " + update);
+        }
     }
 
     public static void setTdlibParameters(Client client, Callback callback, String directoryPath) {

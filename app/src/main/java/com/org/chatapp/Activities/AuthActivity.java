@@ -45,7 +45,7 @@ public class AuthActivity extends AppCompatActivity implements TDLibManager.Call
                 if (!code.equals("")) {
                     TdApi.CheckAuthenticationCode authCode = new TdApi.CheckAuthenticationCode(code);
                     //client = Client.create(AuthActivity.this,null,null);
-                    client.send(authCode, AuthActivity.this);
+                    client.send(authCode, AuthActivity.this::onResult);
                 }
             }
         });
@@ -113,17 +113,23 @@ public class AuthActivity extends AppCompatActivity implements TDLibManager.Call
                         authStateRequest.systemVersion = "12.0";
                         parameters.applicationVersion = "0.0.1";
                         authStateRequest.enableStorageOptimizer = true;
-                        client.send(new TdApi.SetTdlibParameters(parameters), null);
+                        client.send(new TdApi.SetTdlibParameters(parameters), this::onResult);
                         break;
                     case TdApi.AuthorizationStateWaitEncryptionKey.CONSTRUCTOR:
-                        client.send(new TdApi.CheckDatabaseEncryptionKey(), this);
+                        client.send(new TdApi.CheckDatabaseEncryptionKey(), this::onResult);
                         break;
                     case TdApi.AuthorizationStateReady.CONSTRUCTOR:
                         Intent conversationIntent = new Intent(AuthActivity.this, MainActivity.class);
                         conversationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(conversationIntent);
+<<<<<<< Updated upstream
                         //client.send(new TdApi.UpdateAuthorizationState(new TdApi.AuthorizationStateReady()),null,null);
                         //finish();
+=======
+                        break;
+                    //client.send(new TdApi.UpdateAuthorizationState(new TdApi.AuthorizationStateReady()),null,null);
+                    //finish();
+>>>>>>> Stashed changes
                 }
             case TdApi.UpdateConnectionState.CONSTRUCTOR:
                 switch (((TdApi.UpdateConnectionState) object).state.getConstructor()) {
@@ -132,6 +138,7 @@ public class AuthActivity extends AppCompatActivity implements TDLibManager.Call
                         Toast.makeText(AuthActivity.this, "Successfully loginned!", Toast.LENGTH_SHORT).show();
                         break;
                 }
+                break;
         }
 
 
