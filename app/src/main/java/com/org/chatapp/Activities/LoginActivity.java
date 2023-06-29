@@ -40,7 +40,8 @@ public class LoginActivity extends AppCompatActivity implements TDLibManager.Cal
          * gọi phương thức saveAccessToken() của TokenStorage để lưu trữ Token
          */
         client = TDLibManager.getClient(this);
-
+        TdApi.GetAuthorizationState getAuthorizationState = new TdApi.GetAuthorizationState();
+        client.send(getAuthorizationState, this::onResult);
         // Khởi tạo TokenStorage và gán giá trị cho token và hasToken
         tokenStorage = new TokenStorage(this);
         token = tokenStorage.getAccessToken();
@@ -105,8 +106,13 @@ public class LoginActivity extends AppCompatActivity implements TDLibManager.Cal
         if (object instanceof TdApi.Ok) {
             // Xác thực thành công
             // Xử lý và chuyển hướng đến màn hình ConversationActivity
+<<<<<<< Updated upstream
             Log.d("LoginActivity", "onResult: Xác thực thành công -> GO TO TEST");
             Intent intent = new Intent(LoginActivity.this, ListConversationsActivity.class);
+=======
+            Log.d("LoginActivity", "onResult: input OTP");
+            Intent intent = new Intent(LoginActivity.this, AuthActivity.class);
+>>>>>>> Stashed changes
             startActivity(intent);
             finish();
             // Lấy Token từ kết quả xác thực
@@ -122,6 +128,35 @@ public class LoginActivity extends AppCompatActivity implements TDLibManager.Cal
             // Xử lý các kết quả khác từ TDLib
             Log.d("LoginActivity", "onResult: xử lý kết quả từ TDLib");
         }
+<<<<<<< Updated upstream
+=======
+
+       /* switch (object.getConstructor()) {
+            case TdApi.Ok.CONSTRUCTOR:
+                Log.d("onResult-->", "Ok.Contructor + " + object);
+                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                startActivity(intent);
+                finish();
+                break;
+            case TdApi.Error.CONSTRUCTOR:
+                edt_sdt.setError("Lỗi Xác Thực, kiểm tra số điện thoại");
+                Toast.makeText(this, "Lỗi Xác Thực", Toast.LENGTH_SHORT).show();
+                Log.d("LoginActivity", "onResult: lỗi xác thực");
+                break;
+            case TdApi.AuthorizationStateWaitPhoneNumber.CONSTRUCTOR:
+                Log.d("onResult-->", "AuthorizationStateWaitPhoneNumber: ");
+                TdApi.PhoneNumberAuthenticationSettings authenticationSettings = new TdApi.PhoneNumberAuthenticationSettings();
+                authenticationSettings.allowFlashCall = true;
+                authenticationSettings.isCurrentPhoneNumber = true;
+                client.send(new TdApi.SetAuthenticationPhoneNumber(strSDT, authenticationSettings), this);
+                Intent loginIntent = new Intent(LoginActivity.this, AuthActivity.class);
+                startActivity(loginIntent);
+                finish();
+                break;
+            default:
+                Log.d("onResult-->", "default");
+        }*/
+>>>>>>> Stashed changes
 
     }
 

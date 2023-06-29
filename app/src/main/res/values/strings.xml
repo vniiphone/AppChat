@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">ChatApp</string>
-    <string name="authCodeInfo">Please enter the code which you received</string>
-    <string name="check">Check</string>
+    <string name="authCodeInfo">Nhập mã OTP mà bạn nhận được để xác thực</string>
+    <string name="check">Kiểm tra</string>
     <string name="hello_welco">
 Hello, Welcome Back
 </string>

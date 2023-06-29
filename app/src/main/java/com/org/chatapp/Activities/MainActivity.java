@@ -14,6 +14,7 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.Toast;
 
+import com.org.chatapp.Local.TokenStorage;
 import com.org.chatapp.R;
 import com.org.chatapp.Utils.ChatsManager;
 import com.org.chatapp.Utils.TDLibManager;
@@ -43,7 +44,7 @@ public class MainActivity extends AppCompatActivity implements TDLibManager.Call
         setContentView(R.layout.activity_main);
         TdApi.GetAuthorizationState AuthState = new TdApi.GetAuthorizationState();
         client = TDLibManager.getClient(this);
-        client.send(AuthState, this);
+        client.send(AuthState, this::onResult);
     }
 
 
@@ -62,15 +63,62 @@ public class MainActivity extends AppCompatActivity implements TDLibManager.Call
     @Override
     public void onResult(TdApi.Object object) {
         // Xử lý kết quả nhận được từ TDLib
-        if (object.getConstructor() == TdApi.UpdateAuthorizationState.CONSTRUCTOR) {
-            onAuthStateUpdated(((TdApi.UpdateAuthorizationState) object).authorizationState);
+        // Xử lý kết quả nhận được từ TDLib
+//        if (object.getConstructor() == TdApi.UpdateAuthorizationState.CONSTRUCTOR) {
+//            onAuthStateUpdated(((TdApi.UpdateAuthorizationState) object).authorizationState);
+//        }
+        switch (object.getConstructor()) {
+            case TdApi.UpdateAuthorizationState.CONSTRUCTOR:
+                Log.d("onResult-->", "onResult: UpdateAuthorizationState.CONSTRUCTOR");
+                onAuthStateUpdated(((TdApi.UpdateAuthorizationState) object).authorizationState);
+                break;
+            case TdApi.AuthorizationStateWaitTdlibParameters.CONSTRUCTOR:
+                Log.d("onResult-->", "onResult: AuthorizationStateWaitTdlibParameters");
+                TdApi.TdlibParameters authStateRequest = new TdApi.TdlibParameters();
+                // Gửi yêu cầu khởi tạo TDLib parameters
+                TdApi.TdlibParameters parameters = new TdApi.TdlibParameters();
+                parameters.apiId = 25729812;
+                parameters.apiHash = "8285aa99a082199b9884819998f28c94";
+                parameters.databaseDirectory = getApplicationContext().getFilesDir().getAbsolutePath();
+                parameters.useMessageDatabase = true;
+                parameters.useSecretChats = true;
+                parameters.systemLanguageCode = "en";
+                parameters.deviceModel = "Pixel 6";
+                authStateRequest.systemVersion = "12.0";
+                parameters.applicationVersion = "0.0.2";
+                authStateRequest.enableStorageOptimizer = true;
+                client.send(new TdApi.SetTdlibParameters(parameters), this::onResult);
+                break;
+            case TdApi.AuthorizationStateWaitEncryptionKey.CONSTRUCTOR:
+                Log.d("onResult-->", "onResult: AuthorizationStateWaitEncryptionKey");
+                client.send(new TdApi.CheckDatabaseEncryptionKey(), this::onResult);
+                TdApi.GetAuthorizationState AuthState = new TdApi.GetAuthorizationState();
+                client.send(AuthState, this::onResult);
+                break;
+            case TdApi.AuthorizationStateWaitPhoneNumber.CONSTRUCTOR:
+                Log.d("onResult-->", "AuthorizationStateWaitPhoneNumber: ");
+                TdApi.PhoneNumberAuthenticationSettings authenticationSettings = new TdApi.PhoneNumberAuthenticationSettings();
+                authenticationSettings.allowFlashCall = true;
+                authenticationSettings.isCurrentPhoneNumber = true;
+                client.send(new TdApi.SetAuthenticationPhoneNumber("+917418189531", authenticationSettings), this);
+                Intent loginIntent = new Intent(MainActivity.this, LoginActivity.class);
+                startActivity(loginIntent);
+                finish();
+                break;
+
+            // Todo: Implement methods to save or get Token
+//                authenticationSettings.authenticationTokens = token;
+//            client.send(new TdApi.SetAuthenticationPhoneNumber("+917418189531", ), this);
+//            break;
         }
     }
 
+
     @Override
     public void onUonUpdatesReceived(TdApi.Object update) {
-
+        Log.d("onUpdatesReceived", "Update: " + update);
     }
+
 
     private void onAuthStateUpdated(TdApi.AuthorizationState authorizationState) {
         switch (authorizationState.getConstructor()) {
@@ -101,6 +149,9 @@ public class MainActivity extends AppCompatActivity implements TDLibManager.Call
                 break;
             case TdApi.AuthorizationStateReady.CONSTRUCTOR:
                 // Đã đăng nhập trước đó, chuyển hướng đến ConversationActivity
+                String accessToken = "your_access_token_here";
+                TokenStorage tokenStorage = new TokenStorage(MainActivity.this);
+                tokenStorage.saveAccessToken(accessToken);
                 Log.d("Main", "Gọi ListConversationsActivity: ");
                 Intent conversationIntent = new Intent(MainActivity.this, ListConversationsActivity.class);
                 startActivity(conversationIntent);
@@ -130,11 +181,22 @@ public class MainActivity extends AppCompatActivity implements TDLibManager.Call
             }
             case TdApi.AuthorizationStateLoggingOut.CONSTRUCTOR:
                 haveAuthorization = false;
+                TokenStorage tokenStoragelogout = new TokenStorage(MainActivity.this);
+                tokenStoragelogout.clearAccessToken();
                 System.out.println("Logging out");
                 break;
             case TdApi.AuthorizationStateClosing.CONSTRUCTOR:
                 haveAuthorization = false;
-                System.out.println("Closing");
+                TokenStorage tokenStorageGet = new TokenStorage(MainActivity.this);
+                if (tokenStorageGet.hasAccessToken()) {
+                    String accessTokenGet = tokenStorageGet.getAccessToken();
+                    // Sử dụng accessToken để thực hiện các yêu cầu xác thực hoặc thao tác khác
+
+                } else {
+                    // Người dùng chưa đăng nhập, chuyển hướng đến màn hình đăng nhập hoặc thực hiện các xử lý tương ứng
+                }
+               /* Intent openMain = new Intent(MainActivity.this, LoginActivity.class);
+                startActivity(openMain);*/
                 break;
             default:
                 System.err.println("Unsupported authorization state:" + authorizationState);
